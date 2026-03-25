@@ -1,0 +1,32 @@
+[0] markdown   | # Analisis descriptivo de los datos climaticos
+[1] code       | !python -m pip install statsmodels
+[2] code       | !python -m pip install seaborn
+[3] code       | !python -m pip install pandas numpy matplotlib
+[4] code       | import pandas as pd
+[5] markdown   | Carga de datos y analisis inicial
+[6] code       | df = pd.read_csv('wunderground_ezeiza_2001_2026.csv')
+[7] code       | # Ver estadísticas descriptivas
+[8] code       | # Valores nulos
+[9] code       | df = df.drop(columns=["precip_total_in"])
+[10] markdown   | Aca se puede evidenciar que no hay valores nulos pero si hay valores atipicos en la temperatura, queda ver que otros val
+[11] code       | # Boxplot para cada columna numerica
+[12] markdown   | Se pueden observar multipls valores atipicos, observemos cada una de ellas
+[13] code       | num_cols = df.select_dtypes(include="number").columns
+[14] code       | numeric_cols = [
+[15] code       | # Boxplot para cada columna numerica
+[16] markdown   | Como se puede apreciar, la mayoria de valores atipicos desaparecieron.
+[17] code       | # Matriz de correlaccion con seaborn
+[18] markdown   | Las relaciones más importantes observadas son las siguientes:
+[19] code       | import matplotlib.dates as mdates
+[20] markdown   | Claramente existe un componente periodico a lo largo de los anos.
+[21] code       | # Promedio mensual de temp_max_f por año (heatmap)
+[22] markdown   | El mapa de calor confirma visualmente la fuerte estacionalidad de la serie temporal mediante bandas verticales de color,
+[23] code       | # Boxplot de temp_max_f por mes (ver distribución estacional)
+[24] markdown   | De este grafico se pueden apreciar dos cosas:
+[25] code       | # Correlación de todas las variables numéricas con temp_max_f
+[26] code       | # Autocorrelación de temp_max_f hasta 30 días
+[27] markdown   | Se puede apreciar una Fuerte "memoria" a corto y mediano plazo. Esto significa que la temperatura de hoy está fuertement
+[28] code       | # Crear lags y ver correlación con temp_max_f
+[29] markdown   | El cálculo de correlación lineal entre la temperatura máxima y sus rezagos recientes confirma numéricamente una fuerte i
+[30] code       | yearly_avg = df[df['year'] <= 2025].groupby('year')['temp_max_f'].mean()
+[31] markdown   | Este gráfico de líneas revela una clara tendencia alcista a largo plazo en las temperaturas máximas promedio durante los
