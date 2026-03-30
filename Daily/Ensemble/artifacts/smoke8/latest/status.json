@@ -1,0 +1,110 @@
+{
+  "status": "blocked",
+  "generated_at": "2026-03-29T16:50:26-04:00",
+  "run_id": "2026-03-29_165012",
+  "run_dir": "C:\\Users\\orlia\\Documents\\Polymarket\\PrediccionClima\\Daily\\Ensemble\\artifacts\\smoke8\\runs\\2026-03-29_165012",
+  "latest_dir": "C:\\Users\\orlia\\Documents\\Polymarket\\PrediccionClima\\Daily\\Ensemble\\artifacts\\smoke8\\latest",
+  "last_observation_used": {
+    "date": "2026-03-27T00:00:00",
+    "year": 2026,
+    "month": 3,
+    "day": 27,
+    "observation_index": 14,
+    "observation_time": "1:00 PM",
+    "temperature_f": 79,
+    "dew_point_f": 68,
+    "humidity_pct": 69,
+    "wind_direction": "VAR",
+    "wind_speed_mph": 2,
+    "wind_gust_mph": 0,
+    "pressure_in": 29.9,
+    "precip_in": 0.0,
+    "condition": "Cloudy",
+    "source_url": "https://www.wunderground.com/history/daily/ar/ezeiza/SAEZ/date/2026-3-27",
+    "observation_datetime": "2026-03-27 13:00:00"
+  },
+  "data_update": {
+    "updated": false,
+    "downloaded_rows": 0,
+    "last_observation_datetime": "2026-03-27 13:00:00",
+    "last_observation_date": "2026-03-27"
+  },
+  "csv_metadata": {
+    "path": "C:\\Users\\orlia\\Documents\\Polymarket\\PrediccionClima\\Daily\\Ensemble\\data\\wunderground_ezeiza_daily_2014_2026.csv",
+    "size_bytes": 16486362,
+    "sha256": "721fb6fc62d48237de419bcb8efde256d9c46460e6cb64454fbd282b7ba59c04",
+    "last_modified": "2026-03-28T16:01:33-04:00"
+  },
+  "compatibility_issues": [
+    "horizon distinto: GRU=6 vs LightGBM=8"
+  ],
+  "retraining": null,
+  "metrics": {
+    "gru": {
+      "train": {
+        "mae": 2.520247459411621,
+        "rmse": 3.3620485534520532,
+        "mape": 4.245156288146973,
+        "r2": 0.9287601589443586,
+        "coverage_with_mae_band": 0.7064410291832154
+      },
+      "val": {
+        "mae": 3.0034658908843994,
+        "rmse": 3.936934052015532,
+        "mape": 5.021341323852539,
+        "r2": 0.9059546847083911,
+        "coverage_with_mae_band": 0.6230611313868614
+      },
+      "test": {
+        "mae": 3.1708574295043945,
+        "rmse": 4.218396659465171,
+        "mape": 5.0117292404174805,
+        "r2": 0.9019190033325818,
+        "coverage_with_mae_band": 0.606237322515213
+      }
+    },
+    "lightgbm": {
+      "train": {
+        "mae": 2.294131617768649,
+        "rmse": 3.002741952770613,
+        "mape": 3.8352372840713995,
+        "r2": 0.9431304023103646,
+        "coverage_with_prediction_interval": 0.9185711272062442,
+        "mean_prediction_interval_width_f": 10.363136011117064
+      },
+      "val": {
+        "mae": 3.2483938037184914,
+        "rmse": 4.205809106580103,
+        "mape": 5.4596125885351885,
+        "r2": 0.892742247536112,
+        "coverage_with_prediction_interval": 0.7999538532533457,
+        "mean_prediction_interval_width_f": 10.363136011117064
+      },
+      "test": {
+        "mae": 3.3825979749470334,
+        "rmse": 4.440392657662897,
+        "mape": 5.371706354424796,
+        "r2": 0.8913242131387719,
+        "coverage_with_prediction_interval": 0.7870182555780934,
+        "mean_prediction_interval_width_f": 10.363136011117064
+      }
+    },
+    "ensemble": null
+  },
+  "gru_model": {
+    "lookback": 48,
+    "horizon": 6,
+    "max_gap_minutes": 120,
+    "hidden_size": 64,
+    "num_layers": 2
+  },
+  "lightgbm_model": {
+    "lookback": 96,
+    "horizon": 8,
+    "max_gap_minutes": 120,
+    "best_iteration": 393
+  },
+  "ensemble_weights": null,
+  "prediction_band": null,
+  "live_forecast": null
+}

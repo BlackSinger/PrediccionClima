@@ -1,0 +1,29 @@
+{
+  "data_update": {
+    "updated": false,
+    "downloaded_rows": 0,
+    "last_observation_datetime": "2026-03-27 13:00:00",
+    "last_observation_date": "2026-03-27"
+  },
+  "retraining": null,
+  "gru_model": {
+    "lookback": 48,
+    "horizon": 6,
+    "max_gap_minutes": 120,
+    "hidden_size": 64,
+    "num_layers": 2
+  },
+  "lightgbm_model": {
+    "lookback": 96,
+    "horizon": 8,
+    "max_gap_minutes": 120,
+    "best_iteration": 393
+  },
+  "compatibility_issues": [
+    "horizon distinto: GRU=6 vs LightGBM=8"
+  ],
+  "ensemble_weights": null,
+  "ensemble_metrics": null,
+  "prediction_band": null,
+  "live_forecast": null
+}

@@ -1,0 +1,500 @@
+{
+  "generated_at": "2026-03-29T19:02:48-04:00",
+  "last_observation_used": {
+    "date": "2026-03-29T00:00:00",
+    "year": 2026,
+    "month": 3,
+    "day": 29,
+    "observation_index": 24,
+    "observation_time": "6:00 PM",
+    "temperature_f": 81,
+    "dew_point_f": 72,
+    "humidity_pct": 74,
+    "wind_direction": "S",
+    "wind_speed_mph": 5,
+    "wind_gust_mph": 0,
+    "pressure_in": 29.87,
+    "precip_in": 0.0,
+    "condition": "Fair",
+    "source_url": "https://www.wunderground.com/history/daily/ar/ezeiza/SAEZ/date/2026-3-29",
+    "observation_datetime": "2026-03-29 18:00:00"
+  },
+  "config_snapshot": {
+    "shared": {
+      "forecast_horizon": 6,
+      "train_ratio": 0.75,
+      "val_ratio": 0.15,
+      "interval_coverage": 0.8,
+      "max_gap_minutes": 120,
+      "seed": 24217956
+    },
+    "paths": {
+      "data": "data/wunderground_ezeiza_daily_2014_2026.csv",
+      "output_root": "artifacts",
+      "runs_directory": "runs",
+      "latest_directory": "latest",
+      "status_file": "status.json",
+      "gru_artifact": "models/gru_daily_temperature/gru_daily_temperature.pt",
+      "gru_cleaned_data": "models/gru_daily_temperature/cleaned_weather_for_gru.csv",
+      "lightgbm_model": "models/lightgbm_daily_temperature_search/lightgbm_daily_temperature.txt",
+      "lightgbm_metadata": "models/lightgbm_daily_temperature_search/lightgbm_daily_temperature_metadata.json",
+      "lightgbm_cleaned_data": "models/lightgbm_daily_temperature_search/cleaned_weather_for_lightgbm.csv"
+    },
+    "ensemble": {
+      "runtime_defaults": {
+        "weight_grid_step": 0.01,
+        "batch_size": 512,
+        "headless": true,
+        "update_data": true,
+        "retrain_models": true,
+        "lightgbm_search_trials": 0
+      }
+    },
+    "gru": {
+      "train_defaults": {
+        "lookback": 48,
+        "hidden_size": 64,
+        "num_layers": 2,
+        "dropout": 0.2,
+        "batch_size": 128,
+        "epochs": 60,
+        "patience": 8,
+        "learning_rate": 0.0005
+      }
+    },
+    "lightgbm": {
+      "feature_engineering": {
+        "lag_source_features": [
+          "temperature_f",
+          "dew_point_f",
+          "humidity_pct",
+          "wind_speed_mph",
+          "pressure_in"
+        ],
+        "lag_step_candidates": [
+          1,
+          2,
+          3,
+          4,
+          6,
+          8,
+          12,
+          16,
+          24,
+          32,
+          48,
+          72,
+          96
+        ],
+        "rolling_window_candidates": [
+          3,
+          6,
+          12,
+          24,
+          48,
+          96
+        ]
+      },
+      "search": {
+        "param_names": [
+          "learning_rate",
+          "num_leaves",
+          "max_depth",
+          "min_data_in_leaf",
+          "feature_fraction",
+          "bagging_fraction",
+          "bagging_freq",
+          "lambda_l1",
+          "lambda_l2",
+          "min_gain_to_split"
+        ],
+        "param_candidates": {
+          "learning_rate": [
+            0.005,
+            0.01,
+            0.02,
+            0.03,
+            0.05,
+            0.08
+          ],
+          "num_leaves": [
+            31,
+            63,
+            127,
+            255,
+            511
+          ],
+          "max_depth": [
+            -1,
+            6,
+            8,
+            10,
+            12
+          ],
+          "min_data_in_leaf": [
+            10,
+            20,
+            40,
+            60,
+            80,
+            100,
+            120
+          ],
+          "feature_fraction": [
+            0.7,
+            0.75,
+            0.8,
+            0.85,
+            0.9,
+            0.95,
+            1.0
+          ],
+          "bagging_fraction": [
+            0.7,
+            0.75,
+            0.8,
+            0.85,
+            0.9,
+            0.95,
+            1.0
+          ],
+          "bagging_freq": [
+            0,
+            1,
+            3,
+            5
+          ],
+          "lambda_l1": [
+            0.0,
+            0.1,
+            0.5,
+            1.0
+          ],
+          "lambda_l2": [
+            0.0,
+            0.5,
+            1.0,
+            2.0,
+            5.0
+          ],
+          "min_gain_to_split": [
+            0.0,
+            0.01,
+            0.05,
+            0.1
+          ]
+        }
+      },
+      "train_defaults": {
+        "lookback": 96,
+        "num_boost_round": 1500,
+        "patience": 8,
+        "learning_rate": 0.02,
+        "num_leaves": 255,
+        "max_depth": 8,
+        "min_data_in_leaf": 40,
+        "feature_fraction": 0.7,
+        "bagging_fraction": 1.0,
+        "bagging_freq": 3,
+        "lambda_l1": 0.1,
+        "lambda_l2": 0.0,
+        "min_gain_to_split": 0.1,
+        "search_trials": 0,
+        "search_metric": "mae",
+        "num_threads": 0
+      }
+    }
+  },
+  "data_update": {
+    "updated": true,
+    "downloaded_rows": 76,
+    "last_observation_datetime": "2026-03-29 18:00:00",
+    "last_observation_date": "2026-03-29"
+  },
+  "csv_metadata": {
+    "path": "C:\\Users\\orlia\\Documents\\Polymarket\\PrediccionClima\\Daily\\Ensemble\\data\\wunderground_ezeiza_daily_2014_2026.csv",
+    "size_bytes": 18856022,
+    "sha256": "f394a797f6aef0609d97bc9759c75c423a0fd53dc7685f9769d4afe353932782",
+    "last_modified": "2026-03-29T18:18:51-04:00"
+  },
+  "metrics": {
+    "gru": {
+      "train": {
+        "mae": 2.4868767261505127,
+        "rmse": 3.3271488674511756,
+        "mape": 4.1580986976623535,
+        "r2": 0.9303067751499958,
+        "coverage_with_prediction_interval": 0.8569002512937612,
+        "mean_prediction_interval_width_f": 9.243606567382812
+      },
+      "val": {
+        "mae": 2.974424123764038,
+        "rmse": 3.865766044393446,
+        "mape": 4.940245151519775,
+        "r2": 0.9094647570058666,
+        "coverage_with_prediction_interval": 0.7999885968413251,
+        "mean_prediction_interval_width_f": 9.24360466003418
+      },
+      "test": {
+        "mae": 3.128176689147949,
+        "rmse": 4.098381625575215,
+        "mape": 4.934504508972168,
+        "r2": 0.907271414959449,
+        "coverage_with_prediction_interval": 0.7833361500760521,
+        "mean_prediction_interval_width_f": 9.243605613708496
+      }
+    },
+    "lightgbm": {
+      "train": {
+        "mae": 2.1374482394871137,
+        "rmse": 2.8174160600318894,
+        "mape": 3.5657650054945647,
+        "r2": 0.9500392805795588,
+        "coverage_with_prediction_interval": 0.8994549393212364,
+        "mean_prediction_interval_width_f": 9.051792686658487
+      },
+      "val": {
+        "mae": 2.8604736798833015,
+        "rmse": 3.7454989117265365,
+        "mape": 4.817287596034506,
+        "r2": 0.9150420030490877,
+        "coverage_with_prediction_interval": 0.7999654118867816,
+        "mean_prediction_interval_width_f": 9.051792686658484
+      },
+      "test": {
+        "mae": 3.044159519685315,
+        "rmse": 4.021440880592892,
+        "mape": 4.841159426911933,
+        "r2": 0.910720406013388,
+        "coverage_with_prediction_interval": 0.7769139766773703,
+        "mean_prediction_interval_width_f": 9.051792686658485
+      }
+    },
+    "ensemble": {
+      "test": {
+        "mae": 2.9495830425561267,
+        "rmse": 3.898141878576277,
+        "mape": 4.679993714507683,
+        "r2": 0.9161111746441807,
+        "coverage_with_prediction_interval": 0.7788575291532871,
+        "mean_prediction_interval_width_f": 8.775900179403195
+      },
+      "train": {
+        "mae": 2.1736956466866886,
+        "rmse": 2.8882827822814354,
+        "mape": 3.636484117221992,
+        "r2": 0.947494338498822,
+        "coverage_with_prediction_interval": 0.8850481004402413,
+        "mean_prediction_interval_width_f": 8.775900179403195
+      },
+      "val": {
+        "mae": 2.7909916605644858,
+        "rmse": 3.650554063841998,
+        "mape": 4.683864974054327,
+        "r2": 0.9192946206303421,
+        "coverage_with_prediction_interval": 0.7999654118867816,
+        "mean_prediction_interval_width_f": 8.775900179403195
+      }
+    }
+  },
+  "compatibility_issues": [],
+  "retraining": {
+    "gru": {
+      "device": "cpu",
+      "rows_after_cleaning": 118340,
+      "feature_count": 36,
+      "sequence_counts": {
+        "train": 87149,
+        "val": 17539,
+        "test": 11834
+      },
+      "split_info": {
+        "train_end_timestamp": "2023-02-19 07:00:00",
+        "val_end_timestamp": "2024-12-28 23:00:00",
+        "total_rows": 118340,
+        "max_gap_minutes": 120
+      },
+      "metrics": {
+        "train": {
+          "mae": 2.4868767261505127,
+          "rmse": 3.3271488674511756,
+          "mape": 4.1580986976623535,
+          "r2": 0.9303067751499958,
+          "coverage_with_prediction_interval": 0.8569002512937612,
+          "mean_prediction_interval_width_f": 9.243606567382812
+        },
+        "val": {
+          "mae": 2.974424123764038,
+          "rmse": 3.865766044393446,
+          "mape": 4.940245151519775,
+          "r2": 0.9094647570058666,
+          "coverage_with_prediction_interval": 0.7999885968413251,
+          "mean_prediction_interval_width_f": 9.24360466003418
+        },
+        "test": {
+          "mae": 3.128176689147949,
+          "rmse": 4.098381625575215,
+          "mape": 4.934504508972168,
+          "r2": 0.907271414959449,
+          "coverage_with_prediction_interval": 0.7833361500760521,
+          "mean_prediction_interval_width_f": 9.243605613708496
+        }
+      },
+      "prediction_band": {
+        "method": "validation_residual_quantiles",
+        "reference_split": "val",
+        "coverage_target": 0.8,
+        "alpha": 0.19999999999999996,
+        "lower_residual_quantile_f": -4.109899997711182,
+        "upper_residual_quantile_f": 5.133702754974365,
+        "residual_median_f": 0.5909538269042969,
+        "residual_mad_f": 2.3528099060058594,
+        "empirical_coverage_reference_split": 0.7999885968413251,
+        "mean_interval_width_f": 9.24360466003418
+      },
+      "training_config": {
+        "lookback": 48,
+        "horizon": 6,
+        "hidden_size": 64,
+        "num_layers": 2,
+        "dropout": 0.2,
+        "batch_size": 128,
+        "epochs": 60,
+        "patience": 8,
+        "learning_rate": 0.0005
+      }
+    },
+    "lightgbm": {
+      "device": "cpu",
+      "rows_after_cleaning": 118340,
+      "feature_count": 36,
+      "engineered_feature_count": 251,
+      "sequence_counts": {
+        "train": 85862,
+        "val": 17347,
+        "test": 11834
+      },
+      "split_info": {
+        "train_end_timestamp": "2023-02-19 07:00:00",
+        "val_end_timestamp": "2024-12-28 23:00:00",
+        "total_rows": 118340,
+        "max_gap_minutes": 120
+      },
+      "metrics": {
+        "train": {
+          "mae": 2.1374482394871137,
+          "rmse": 2.8174160600318894,
+          "mape": 3.5657650054945647,
+          "r2": 0.9500392805795588,
+          "coverage_with_prediction_interval": 0.8994549393212364,
+          "mean_prediction_interval_width_f": 9.051792686658487
+        },
+        "val": {
+          "mae": 2.8604736798833015,
+          "rmse": 3.7454989117265365,
+          "mape": 4.817287596034506,
+          "r2": 0.9150420030490877,
+          "coverage_with_prediction_interval": 0.7999654118867816,
+          "mean_prediction_interval_width_f": 9.051792686658484
+        },
+        "test": {
+          "mae": 3.044159519685315,
+          "rmse": 4.021440880592892,
+          "mape": 4.841159426911933,
+          "r2": 0.910720406013388,
+          "coverage_with_prediction_interval": 0.7769139766773703,
+          "mean_prediction_interval_width_f": 9.051792686658485
+        }
+      },
+      "prediction_band": {
+        "method": "validation_residual_quantiles",
+        "reference_split": "val",
+        "coverage_target": 0.8,
+        "alpha": 0.19999999999999996,
+        "lower_residual_quantile_f": -4.502785417123294,
+        "upper_residual_quantile_f": 4.549007269535192,
+        "residual_median_f": 0.2592875201749081,
+        "residual_mad_f": 2.2544792041633954,
+        "empirical_coverage_reference_split": 0.7999654118867816,
+        "mean_interval_width_f": 9.051792686658484
+      },
+      "model_type": "lightgbm",
+      "model_config": {
+        "num_leaves": 255,
+        "max_depth": 8,
+        "min_data_in_leaf": 40,
+        "feature_fraction": 0.7,
+        "bagging_fraction": 1.0,
+        "bagging_freq": 3,
+        "lambda_l1": 0.1,
+        "lambda_l2": 0.0,
+        "min_gain_to_split": 0.1,
+        "best_iteration": 356,
+        "top_feature_by_gain": "temperature_f_window_24_mean"
+      },
+      "feature_engineering": {
+        "lag_source_features": [
+          "temperature_f",
+          "dew_point_f",
+          "humidity_pct",
+          "wind_speed_mph",
+          "pressure_in"
+        ],
+        "lag_steps": [
+          1,
+          2,
+          3,
+          4,
+          6,
+          8,
+          12,
+          16,
+          24,
+          32,
+          48,
+          72,
+          96
+        ],
+        "rolling_windows": [
+          3,
+          6,
+          12,
+          24,
+          48,
+          96
+        ]
+      },
+      "hyperparameter_search": {
+        "enabled": false,
+        "trial_count": 1,
+        "search_metric": "mae",
+        "best_trial_id": 0,
+        "best_trial_source": "baseline",
+        "best_search_score": 2.8604736798833015,
+        "best_params": {
+          "learning_rate": 0.02,
+          "num_leaves": 255,
+          "max_depth": 8,
+          "min_data_in_leaf": 40,
+          "feature_fraction": 0.7,
+          "bagging_fraction": 1.0,
+          "bagging_freq": 3,
+          "lambda_l1": 0.1,
+          "lambda_l2": 0.0,
+          "min_gain_to_split": 0.1
+        }
+      },
+      "training_config": {
+        "objective": "regression",
+        "metrics": [
+          "l1",
+          "l2"
+        ],
+        "learning_rate": 0.02,
+        "num_boost_round": 1500,
+        "patience": 8,
+        "search_trials": 0
+      }
+    }
+  }
+}

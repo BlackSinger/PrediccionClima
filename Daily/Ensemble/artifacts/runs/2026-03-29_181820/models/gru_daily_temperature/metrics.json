@@ -1,0 +1,65 @@
+{
+  "device": "cpu",
+  "rows_after_cleaning": 118340,
+  "feature_count": 36,
+  "sequence_counts": {
+    "train": 87149,
+    "val": 17539,
+    "test": 11834
+  },
+  "split_info": {
+    "train_end_timestamp": "2023-02-19 07:00:00",
+    "val_end_timestamp": "2024-12-28 23:00:00",
+    "total_rows": 118340,
+    "max_gap_minutes": 120
+  },
+  "metrics": {
+    "train": {
+      "mae": 2.4868767261505127,
+      "rmse": 3.3271488674511756,
+      "mape": 4.1580986976623535,
+      "r2": 0.9303067751499958,
+      "coverage_with_prediction_interval": 0.8569002512937612,
+      "mean_prediction_interval_width_f": 9.243606567382812
+    },
+    "val": {
+      "mae": 2.974424123764038,
+      "rmse": 3.865766044393446,
+      "mape": 4.940245151519775,
+      "r2": 0.9094647570058666,
+      "coverage_with_prediction_interval": 0.7999885968413251,
+      "mean_prediction_interval_width_f": 9.24360466003418
+    },
+    "test": {
+      "mae": 3.128176689147949,
+      "rmse": 4.098381625575215,
+      "mape": 4.934504508972168,
+      "r2": 0.907271414959449,
+      "coverage_with_prediction_interval": 0.7833361500760521,
+      "mean_prediction_interval_width_f": 9.243605613708496
+    }
+  },
+  "prediction_band": {
+    "method": "validation_residual_quantiles",
+    "reference_split": "val",
+    "coverage_target": 0.8,
+    "alpha": 0.19999999999999996,
+    "lower_residual_quantile_f": -4.109899997711182,
+    "upper_residual_quantile_f": 5.133702754974365,
+    "residual_median_f": 0.5909538269042969,
+    "residual_mad_f": 2.3528099060058594,
+    "empirical_coverage_reference_split": 0.7999885968413251,
+    "mean_interval_width_f": 9.24360466003418
+  },
+  "training_config": {
+    "lookback": 48,
+    "horizon": 6,
+    "hidden_size": 64,
+    "num_layers": 2,
+    "dropout": 0.2,
+    "batch_size": 128,
+    "epochs": 60,
+    "patience": 8,
+    "learning_rate": 0.0005
+  }
+}

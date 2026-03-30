@@ -1,0 +1,278 @@
+{
+  "data_update": {
+    "updated": true,
+    "downloaded_rows": 76,
+    "last_observation_datetime": "2026-03-29 18:00:00",
+    "last_observation_date": "2026-03-29"
+  },
+  "retraining": {
+    "gru": {
+      "device": "cpu",
+      "rows_after_cleaning": 118340,
+      "feature_count": 36,
+      "sequence_counts": {
+        "train": 87149,
+        "val": 17539,
+        "test": 11834
+      },
+      "split_info": {
+        "train_end_timestamp": "2023-02-19 07:00:00",
+        "val_end_timestamp": "2024-12-28 23:00:00",
+        "total_rows": 118340,
+        "max_gap_minutes": 120
+      },
+      "metrics": {
+        "train": {
+          "mae": 2.4868767261505127,
+          "rmse": 3.3271488674511756,
+          "mape": 4.1580986976623535,
+          "r2": 0.9303067751499958,
+          "coverage_with_prediction_interval": 0.8569002512937612,
+          "mean_prediction_interval_width_f": 9.243606567382812
+        },
+        "val": {
+          "mae": 2.974424123764038,
+          "rmse": 3.865766044393446,
+          "mape": 4.940245151519775,
+          "r2": 0.9094647570058666,
+          "coverage_with_prediction_interval": 0.7999885968413251,
+          "mean_prediction_interval_width_f": 9.24360466003418
+        },
+        "test": {
+          "mae": 3.128176689147949,
+          "rmse": 4.098381625575215,
+          "mape": 4.934504508972168,
+          "r2": 0.907271414959449,
+          "coverage_with_prediction_interval": 0.7833361500760521,
+          "mean_prediction_interval_width_f": 9.243605613708496
+        }
+      },
+      "prediction_band": {
+        "method": "validation_residual_quantiles",
+        "reference_split": "val",
+        "coverage_target": 0.8,
+        "alpha": 0.19999999999999996,
+        "lower_residual_quantile_f": -4.109899997711182,
+        "upper_residual_quantile_f": 5.133702754974365,
+        "residual_median_f": 0.5909538269042969,
+        "residual_mad_f": 2.3528099060058594,
+        "empirical_coverage_reference_split": 0.7999885968413251,
+        "mean_interval_width_f": 9.24360466003418
+      },
+      "training_config": {
+        "lookback": 48,
+        "horizon": 6,
+        "hidden_size": 64,
+        "num_layers": 2,
+        "dropout": 0.2,
+        "batch_size": 128,
+        "epochs": 60,
+        "patience": 8,
+        "learning_rate": 0.0005
+      }
+    },
+    "lightgbm": {
+      "device": "cpu",
+      "rows_after_cleaning": 118340,
+      "feature_count": 36,
+      "engineered_feature_count": 251,
+      "sequence_counts": {
+        "train": 85862,
+        "val": 17347,
+        "test": 11834
+      },
+      "split_info": {
+        "train_end_timestamp": "2023-02-19 07:00:00",
+        "val_end_timestamp": "2024-12-28 23:00:00",
+        "total_rows": 118340,
+        "max_gap_minutes": 120
+      },
+      "metrics": {
+        "train": {
+          "mae": 2.1374482394871137,
+          "rmse": 2.8174160600318894,
+          "mape": 3.5657650054945647,
+          "r2": 0.9500392805795588,
+          "coverage_with_prediction_interval": 0.8994549393212364,
+          "mean_prediction_interval_width_f": 9.051792686658487
+        },
+        "val": {
+          "mae": 2.8604736798833015,
+          "rmse": 3.7454989117265365,
+          "mape": 4.817287596034506,
+          "r2": 0.9150420030490877,
+          "coverage_with_prediction_interval": 0.7999654118867816,
+          "mean_prediction_interval_width_f": 9.051792686658484
+        },
+        "test": {
+          "mae": 3.044159519685315,
+          "rmse": 4.021440880592892,
+          "mape": 4.841159426911933,
+          "r2": 0.910720406013388,
+          "coverage_with_prediction_interval": 0.7769139766773703,
+          "mean_prediction_interval_width_f": 9.051792686658485
+        }
+      },
+      "prediction_band": {
+        "method": "validation_residual_quantiles",
+        "reference_split": "val",
+        "coverage_target": 0.8,
+        "alpha": 0.19999999999999996,
+        "lower_residual_quantile_f": -4.502785417123294,
+        "upper_residual_quantile_f": 4.549007269535192,
+        "residual_median_f": 0.2592875201749081,
+        "residual_mad_f": 2.2544792041633954,
+        "empirical_coverage_reference_split": 0.7999654118867816,
+        "mean_interval_width_f": 9.051792686658484
+      },
+      "model_type": "lightgbm",
+      "model_config": {
+        "num_leaves": 255,
+        "max_depth": 8,
+        "min_data_in_leaf": 40,
+        "feature_fraction": 0.7,
+        "bagging_fraction": 1.0,
+        "bagging_freq": 3,
+        "lambda_l1": 0.1,
+        "lambda_l2": 0.0,
+        "min_gain_to_split": 0.1,
+        "best_iteration": 356,
+        "top_feature_by_gain": "temperature_f_window_24_mean"
+      },
+      "feature_engineering": {
+        "lag_source_features": [
+          "temperature_f",
+          "dew_point_f",
+          "humidity_pct",
+          "wind_speed_mph",
+          "pressure_in"
+        ],
+        "lag_steps": [
+          1,
+          2,
+          3,
+          4,
+          6,
+          8,
+          12,
+          16,
+          24,
+          32,
+          48,
+          72,
+          96
+        ],
+        "rolling_windows": [
+          3,
+          6,
+          12,
+          24,
+          48,
+          96
+        ]
+      },
+      "hyperparameter_search": {
+        "enabled": false,
+        "trial_count": 1,
+        "search_metric": "mae",
+        "best_trial_id": 0,
+        "best_trial_source": "baseline",
+        "best_search_score": 2.8604736798833015,
+        "best_params": {
+          "learning_rate": 0.02,
+          "num_leaves": 255,
+          "max_depth": 8,
+          "min_data_in_leaf": 40,
+          "feature_fraction": 0.7,
+          "bagging_fraction": 1.0,
+          "bagging_freq": 3,
+          "lambda_l1": 0.1,
+          "lambda_l2": 0.0,
+          "min_gain_to_split": 0.1
+        }
+      },
+      "training_config": {
+        "objective": "regression",
+        "metrics": [
+          "l1",
+          "l2"
+        ],
+        "learning_rate": 0.02,
+        "num_boost_round": 1500,
+        "patience": 8,
+        "search_trials": 0
+      }
+    }
+  },
+  "gru_model": {
+    "lookback": 48,
+    "horizon": 6,
+    "max_gap_minutes": 120,
+    "hidden_size": 64,
+    "num_layers": 2
+  },
+  "lightgbm_model": {
+    "lookback": 96,
+    "horizon": 6,
+    "max_gap_minutes": 120,
+    "best_iteration": 356
+  },
+  "compatibility_issues": [],
+  "ensemble_weights": {
+    "gru_weight": 0.37,
+    "lightgbm_weight": 0.63,
+    "validation_metrics": {
+      "mae": 2.790991680652835,
+      "rmse": 3.6505540735959072,
+      "mape": 4.683864980051749,
+      "r2": 0.9192946201990689
+    }
+  },
+  "ensemble_metrics": {
+    "test": {
+      "mae": 2.9495830425561267,
+      "rmse": 3.898141878576277,
+      "mape": 4.679993714507683,
+      "r2": 0.9161111746441807,
+      "coverage_with_prediction_interval": 0.7788575291532871,
+      "mean_prediction_interval_width_f": 8.775900179403195
+    },
+    "train": {
+      "mae": 2.1736956466866886,
+      "rmse": 2.8882827822814354,
+      "mape": 3.636484117221992,
+      "r2": 0.947494338498822,
+      "coverage_with_prediction_interval": 0.8850481004402413,
+      "mean_prediction_interval_width_f": 8.775900179403195
+    },
+    "val": {
+      "mae": 2.7909916605644858,
+      "rmse": 3.650554063841998,
+      "mape": 4.683864974054327,
+      "r2": 0.9192946206303421,
+      "coverage_with_prediction_interval": 0.7999654118867816,
+      "mean_prediction_interval_width_f": 8.775900179403195
+    }
+  },
+  "prediction_band": {
+    "coverage_target": 0.8,
+    "alpha": 0.19999999999999996,
+    "lower_residual_quantile_f": -4.153885428846292,
+    "upper_residual_quantile_f": 4.622014750556902,
+    "residual_median_f": 0.3715364816985982,
+    "residual_mad_f": 2.191989366266,
+    "empirical_coverage_reference_split": 0.7999654118867816,
+    "mean_interval_width_f": 8.775900179403195
+  },
+  "live_forecast": {
+    "last_observation_datetime": "2026-03-29 18:00:00",
+    "estimated_step_minutes": 60.0,
+    "forecast_target_timestamp": "2026-03-30 00:00:00",
+    "horizon_observations_ahead": 6,
+    "gru_prediction_f": 72.27581024169922,
+    "lightgbm_prediction_f": 71.5804604153706,
+    "ensemble_prediction_f": 71.83773985111219,
+    "lower_prediction_interval_f": 67.68385314941406,
+    "upper_prediction_interval_f": 76.45975494384766
+  }
+}

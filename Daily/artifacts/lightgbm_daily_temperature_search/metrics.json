@@ -1,0 +1,131 @@
+{
+  "device": "cpu",
+  "rows_after_cleaning": 118320,
+  "feature_count": 36,
+  "engineered_feature_count": 251,
+  "sequence_counts": {
+    "train": 85326,
+    "val": 17336,
+    "test": 11832
+  },
+  "split_info": {
+    "train_end_timestamp": "2023-02-17 04:00:00",
+    "val_end_timestamp": "2024-12-26 11:00:00",
+    "total_rows": 118320,
+    "max_gap_minutes": 120
+  },
+  "metrics": {
+    "train": {
+      "mae": 2.294131617768649,
+      "rmse": 3.002741952770613,
+      "mape": 3.8352372840713995,
+      "r2": 0.9431304023103646,
+      "coverage_with_prediction_interval": 0.9185711272062442,
+      "mean_prediction_interval_width_f": 10.363136011117064
+    },
+    "val": {
+      "mae": 3.2483938037184914,
+      "rmse": 4.205809106580103,
+      "mape": 5.4596125885351885,
+      "r2": 0.892742247536112,
+      "coverage_with_prediction_interval": 0.7999538532533457,
+      "mean_prediction_interval_width_f": 10.363136011117064
+    },
+    "test": {
+      "mae": 3.3825979749470334,
+      "rmse": 4.440392657662897,
+      "mape": 5.371706354424796,
+      "r2": 0.8913242131387719,
+      "coverage_with_prediction_interval": 0.7870182555780934,
+      "mean_prediction_interval_width_f": 10.363136011117064
+    }
+  },
+  "prediction_band": {
+    "method": "validation_residual_quantiles",
+    "reference_split": "val",
+    "coverage_target": 0.8,
+    "alpha": 0.19999999999999996,
+    "lower_residual_quantile_f": -5.037028412830892,
+    "upper_residual_quantile_f": 5.326107598286171,
+    "residual_median_f": 0.3724651647780952,
+    "residual_mad_f": 2.584521805429258,
+    "empirical_coverage_reference_split": 0.7999538532533457,
+    "mean_interval_width_f": 10.363136011117064
+  },
+  "model_type": "lightgbm",
+  "model_config": {
+    "num_leaves": 255,
+    "max_depth": 8,
+    "min_data_in_leaf": 40,
+    "feature_fraction": 0.7,
+    "bagging_fraction": 1.0,
+    "bagging_freq": 3,
+    "lambda_l1": 0.1,
+    "lambda_l2": 0.0,
+    "min_gain_to_split": 0.1,
+    "best_iteration": 393,
+    "top_feature_by_gain": "temperature_f_lag_16"
+  },
+  "feature_engineering": {
+    "lag_source_features": [
+      "temperature_f",
+      "dew_point_f",
+      "humidity_pct",
+      "wind_speed_mph",
+      "pressure_in"
+    ],
+    "lag_steps": [
+      1,
+      2,
+      3,
+      4,
+      6,
+      8,
+      12,
+      16,
+      24,
+      32,
+      48,
+      72,
+      96
+    ],
+    "rolling_windows": [
+      3,
+      6,
+      12,
+      24,
+      48,
+      96
+    ]
+  },
+  "hyperparameter_search": {
+    "enabled": true,
+    "trial_count": 11,
+    "search_metric": "mae",
+    "best_trial_id": 9,
+    "best_trial_source": "random_search",
+    "best_search_score": 3.2483938037184914,
+    "best_params": {
+      "learning_rate": 0.02,
+      "num_leaves": 255,
+      "max_depth": 8,
+      "min_data_in_leaf": 40,
+      "feature_fraction": 0.7,
+      "bagging_fraction": 1.0,
+      "bagging_freq": 3,
+      "lambda_l1": 0.1,
+      "lambda_l2": 0.0,
+      "min_gain_to_split": 0.1
+    }
+  },
+  "training_config": {
+    "objective": "regression",
+    "metrics": [
+      "l1",
+      "l2"
+    ],
+    "learning_rate": 0.02,
+    "num_boost_round": 1500,
+    "patience": 100
+  }
+}
