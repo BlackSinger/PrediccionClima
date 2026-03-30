@@ -318,6 +318,14 @@ def validate_model_compatibility(
     payload = gru_bundle["payload"]
     metadata = lightgbm_bundle["metadata"]
     issues: list[str] = []
+    gru_horizons = weather_common.normalize_forecast_horizons(
+        payload.get("forecast_horizons"),
+        fallback_horizon=int(payload["horizon"]),
+    )
+    lightgbm_horizons = weather_common.normalize_forecast_horizons(
+        metadata.get("forecast_horizons"),
+        fallback_horizon=int(metadata["horizon"]),
+    )
 
     if payload["target_column"] != metadata["target_column"]:
         issues.append(
@@ -328,6 +336,11 @@ def validate_model_compatibility(
         issues.append(
             "horizon distinto: "
             f"GRU={payload['horizon']} vs LightGBM={metadata['horizon']}"
+        )
+    if gru_horizons != lightgbm_horizons:
+        issues.append(
+            "forecast_horizons distintos: "
+            f"GRU={gru_horizons} vs LightGBM={lightgbm_horizons}"
         )
     return issues
 
@@ -402,6 +415,63 @@ def build_prediction_interval(
     )
 
 
+def flatten_model_predictions(
+    split_name: str,
+    split_arrays: dict[str, object],
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    forecast_horizons: list[int],
+    prediction_column: str,
+    actual_column: str,
+) -> pd.DataFrame:
+    y_true_2d = np.asarray(y_true, dtype=np.float32)
+    y_pred_2d = np.asarray(y_pred, dtype=np.float32)
+    if y_true_2d.ndim == 1:
+        y_true_2d = y_true_2d.reshape(-1, 1)
+    if y_pred_2d.ndim == 1:
+        y_pred_2d = y_pred_2d.reshape(-1, 1)
+
+    anchor_dates = pd.to_datetime(split_arrays["anchor_date"])
+    target_dates = pd.to_datetime(np.asarray(split_arrays["target_dates"]).reshape(-1))
+    sample_count = y_true_2d.shape[0]
+    horizon_count = len(forecast_horizons)
+    return pd.DataFrame(
+        {
+            "forecast_origin_datetime": np.repeat(anchor_dates, horizon_count),
+            "observation_datetime": target_dates,
+            "split": np.repeat(split_name, sample_count * horizon_count),
+            "horizon_step": np.tile(np.asarray(forecast_horizons, dtype=np.int32), sample_count),
+            actual_column: y_true_2d.reshape(-1),
+            prediction_column: y_pred_2d.reshape(-1),
+        }
+    )
+
+
+def build_multihorizon_metrics(
+    frame: pd.DataFrame,
+    prediction_column: str,
+) -> dict[str, object]:
+    overall: dict[str, dict[str, float]] = {}
+    by_horizon: dict[str, dict[str, dict[str, float]]] = {}
+
+    for split_name, split_frame in frame.groupby("split"):
+        overall[str(split_name)] = regression_metrics(
+            split_frame["actual_temperature_f"].to_numpy(),
+            split_frame[prediction_column].to_numpy(),
+        )
+
+    for horizon_step, horizon_frame in frame.groupby("horizon_step"):
+        horizon_metrics: dict[str, dict[str, float]] = {}
+        for split_name, split_frame in horizon_frame.groupby("split"):
+            horizon_metrics[str(split_name)] = regression_metrics(
+                split_frame["actual_temperature_f"].to_numpy(),
+                split_frame[prediction_column].to_numpy(),
+            )
+        by_horizon[str(int(horizon_step))] = horizon_metrics
+
+    return {"overall": overall, "by_horizon": by_horizon}
+
+
 def build_historical_predictions(
     gru_bundle: dict[str, object],
     lightgbm_bundle: dict[str, object],
@@ -413,6 +483,10 @@ def build_historical_predictions(
     lightgbm_rows = lightgbm_model.build_buckets(
         lightgbm_clean_df,
         lightgbm_bundle["metadata"],
+    )
+    forecast_horizons = weather_common.normalize_forecast_horizons(
+        gru_bundle["payload"].get("forecast_horizons"),
+        fallback_horizon=int(gru_bundle["payload"]["horizon"]),
     )
 
     merged_frames: list[pd.DataFrame] = []
@@ -427,25 +501,27 @@ def build_historical_predictions(
             lightgbm_rows[split_name],
         )
 
-        gru_frame = pd.DataFrame(
-            {
-                "observation_datetime": pd.to_datetime(gru_sequences[split_name]["date"]),
-                "split": split_name,
-                "actual_temperature_f": gru_y_true,
-                "predicted_temperature_f_gru": gru_y_pred,
-            }
+        gru_frame = flatten_model_predictions(
+            split_name=split_name,
+            split_arrays=gru_sequences[split_name],
+            y_true=gru_y_true,
+            y_pred=gru_y_pred,
+            forecast_horizons=forecast_horizons,
+            prediction_column="predicted_temperature_f_gru",
+            actual_column="actual_temperature_f",
         )
-        lgb_frame = pd.DataFrame(
-            {
-                "observation_datetime": pd.to_datetime(lightgbm_rows[split_name]["date"]),
-                "split": split_name,
-                "actual_temperature_f_lgb": lgb_y_true,
-                "predicted_temperature_f_lgb": lgb_y_pred,
-            }
+        lgb_frame = flatten_model_predictions(
+            split_name=split_name,
+            split_arrays=lightgbm_rows[split_name],
+            y_true=lgb_y_true,
+            y_pred=lgb_y_pred,
+            forecast_horizons=forecast_horizons,
+            prediction_column="predicted_temperature_f_lgb",
+            actual_column="actual_temperature_f_lgb",
         )
         merged = gru_frame.merge(
             lgb_frame,
-            on=["observation_datetime", "split"],
+            on=["forecast_origin_datetime", "observation_datetime", "split", "horizon_step"],
             how="inner",
         )
         if not merged.empty:
@@ -482,43 +558,55 @@ def fit_ensemble_weights(
 
     grid = np.arange(0.0, 1.0 + weight_grid_step / 2.0, weight_grid_step)
     search_rows: list[dict[str, float]] = []
-    best_weight = 0.0
-    best_metrics: dict[str, float] | None = None
+    weight_rows: list[dict[str, object]] = []
 
-    for gru_weight in grid:
-        ensemble_pred = (
-            gru_weight * validation["predicted_temperature_f_gru"].to_numpy()
-            + (1.0 - gru_weight) * validation["predicted_temperature_f_lgb"].to_numpy()
-        )
-        metrics = regression_metrics(
-            validation["actual_temperature_f"].to_numpy(),
-            ensemble_pred,
-        )
-        row = {
-            "gru_weight": float(gru_weight),
-            "lightgbm_weight": float(1.0 - gru_weight),
-            "val_mae": metrics["mae"],
-            "val_rmse": metrics["rmse"],
-            "val_mape": metrics["mape"],
-            "val_r2": metrics["r2"],
-        }
-        search_rows.append(row)
-        if best_metrics is None or metrics["mae"] < best_metrics["mae"]:
-            best_metrics = metrics
-            best_weight = float(gru_weight)
+    for horizon_step, horizon_frame in validation.groupby("horizon_step"):
+        best_weight = 0.0
+        best_metrics: dict[str, float] | None = None
+        for gru_weight in grid:
+            ensemble_pred = (
+                gru_weight * horizon_frame["predicted_temperature_f_gru"].to_numpy()
+                + (1.0 - gru_weight) * horizon_frame["predicted_temperature_f_lgb"].to_numpy()
+            )
+            metrics = regression_metrics(
+                horizon_frame["actual_temperature_f"].to_numpy(),
+                ensemble_pred,
+            )
+            row = {
+                "horizon_step": int(horizon_step),
+                "gru_weight": float(gru_weight),
+                "lightgbm_weight": float(1.0 - gru_weight),
+                "val_mae": metrics["mae"],
+                "val_rmse": metrics["rmse"],
+                "val_mape": metrics["mape"],
+                "val_r2": metrics["r2"],
+            }
+            search_rows.append(row)
+            if best_metrics is None or metrics["mae"] < best_metrics["mae"]:
+                best_metrics = metrics
+                best_weight = float(gru_weight)
 
-    if best_metrics is None:
-        raise RuntimeError("No se pudo seleccionar un peso para el ensemble.")
+        if best_metrics is None:
+            raise RuntimeError(
+                f"No se pudo seleccionar un peso para el ensemble en horizon_step={horizon_step}."
+            )
+        weight_rows.append(
+            {
+                "horizon_step": int(horizon_step),
+                "gru_weight": best_weight,
+                "lightgbm_weight": float(1.0 - best_weight),
+                "validation_metrics": best_metrics,
+            }
+        )
 
     search_df = pd.DataFrame(search_rows).sort_values(
-        ["val_mae", "val_rmse", "gru_weight"],
-        ascending=[True, True, False],
+        ["horizon_step", "val_mae", "val_rmse", "gru_weight"],
+        ascending=[True, True, True, False],
     ).reset_index(drop=True)
     search_df.insert(0, "rank", np.arange(1, len(search_df) + 1))
     summary = {
-        "gru_weight": best_weight,
-        "lightgbm_weight": float(1.0 - best_weight),
-        "validation_metrics": best_metrics,
+        "selection_metric": "mae",
+        "by_horizon": weight_rows,
     }
     return summary, search_df
 
@@ -526,50 +614,100 @@ def fit_ensemble_weights(
 def apply_ensemble_to_history(
     historical_predictions: pd.DataFrame,
     ensemble_weights: dict[str, object],
-) -> tuple[pd.DataFrame, dict[str, dict[str, float]], dict[str, float]]:
-    gru_weight = float(ensemble_weights["gru_weight"])
-    lgb_weight = float(ensemble_weights["lightgbm_weight"])
+) -> tuple[pd.DataFrame, dict[str, object], dict[str, object]]:
     predictions = historical_predictions.copy()
-    predictions["predicted_temperature_f_ensemble"] = (
-        gru_weight * predictions["predicted_temperature_f_gru"]
-        + lgb_weight * predictions["predicted_temperature_f_lgb"]
-    )
+    weight_by_horizon = {
+        int(row["horizon_step"]): row for row in ensemble_weights["by_horizon"]
+    }
+    predictions["predicted_temperature_f_ensemble"] = np.nan
 
-    validation = predictions[predictions["split"] == "val"]
-    prediction_band = calibrate_prediction_interval(
-        validation["actual_temperature_f"].to_numpy()
-        - validation["predicted_temperature_f_ensemble"].to_numpy(),
-        coverage=0.80,
-    )
+    band_rows: list[dict[str, float]] = []
+    for horizon_step, horizon_frame in predictions.groupby("horizon_step"):
+        horizon_weights = weight_by_horizon[int(horizon_step)]
+        ensemble_pred = (
+            float(horizon_weights["gru_weight"]) * horizon_frame["predicted_temperature_f_gru"]
+            + float(horizon_weights["lightgbm_weight"])
+            * horizon_frame["predicted_temperature_f_lgb"]
+        )
+        predictions.loc[horizon_frame.index, "predicted_temperature_f_ensemble"] = ensemble_pred
 
-    metrics_by_split: dict[str, dict[str, float]] = {}
+        validation = predictions[
+            (predictions["split"] == "val") & (predictions["horizon_step"] == int(horizon_step))
+        ]
+        band = calibrate_prediction_interval(
+            validation["actual_temperature_f"].to_numpy()
+            - validation["predicted_temperature_f_ensemble"].to_numpy(),
+            coverage=0.80,
+        )
+        band["horizon_step"] = int(horizon_step)
+        band_rows.append(band)
+
+        for split_name, split_frame in predictions[
+            predictions["horizon_step"] == int(horizon_step)
+        ].groupby("split"):
+            y_pred = split_frame["predicted_temperature_f_ensemble"].to_numpy()
+            lower, upper = build_prediction_interval(y_pred, band)
+            predictions.loc[split_frame.index, "lower_prediction_interval_f"] = lower
+            predictions.loc[split_frame.index, "upper_prediction_interval_f"] = upper
+
+    metrics_payload = build_multihorizon_metrics(
+        predictions,
+        prediction_column="predicted_temperature_f_ensemble",
+    )
     for split_name, split_frame in predictions.groupby("split"):
         y_true = split_frame["actual_temperature_f"].to_numpy()
-        y_pred = split_frame["predicted_temperature_f_ensemble"].to_numpy()
-        lower, upper = build_prediction_interval(y_pred, prediction_band)
-        metrics = regression_metrics(y_true, y_pred)
-        metrics["coverage_with_prediction_interval"] = float(
+        lower = split_frame["lower_prediction_interval_f"].to_numpy()
+        upper = split_frame["upper_prediction_interval_f"].to_numpy()
+        metrics_payload["overall"][str(split_name)]["coverage_with_prediction_interval"] = float(
             np.mean((y_true >= lower) & (y_true <= upper))
         )
-        metrics["mean_prediction_interval_width_f"] = float(np.mean(upper - lower))
-        metrics_by_split[str(split_name)] = metrics
-        predictions.loc[split_frame.index, "lower_prediction_interval_f"] = lower
-        predictions.loc[split_frame.index, "upper_prediction_interval_f"] = upper
+        metrics_payload["overall"][str(split_name)]["mean_prediction_interval_width_f"] = float(
+            np.mean(upper - lower)
+        )
 
-    prediction_band["empirical_coverage_reference_split"] = metrics_by_split["val"][
-        "coverage_with_prediction_interval"
-    ]
-    prediction_band["mean_interval_width_f"] = metrics_by_split["val"][
+    for horizon_step, horizon_frame in predictions.groupby("horizon_step"):
+        for split_name, split_frame in horizon_frame.groupby("split"):
+            y_true = split_frame["actual_temperature_f"].to_numpy()
+            lower = split_frame["lower_prediction_interval_f"].to_numpy()
+            upper = split_frame["upper_prediction_interval_f"].to_numpy()
+            metrics_payload["by_horizon"][str(int(horizon_step))][str(split_name)][
+                "coverage_with_prediction_interval"
+            ] = float(np.mean((y_true >= lower) & (y_true <= upper)))
+            metrics_payload["by_horizon"][str(int(horizon_step))][str(split_name)][
+                "mean_prediction_interval_width_f"
+            ] = float(np.mean(upper - lower))
+
+    prediction_band = {
+        "overall": calibrate_prediction_interval(
+            predictions[predictions["split"] == "val"]["actual_temperature_f"].to_numpy()
+            - predictions[predictions["split"] == "val"][
+                "predicted_temperature_f_ensemble"
+            ].to_numpy(),
+            coverage=0.80,
+        ),
+        "by_horizon": band_rows,
+    }
+    prediction_band["overall"]["empirical_coverage_reference_split"] = metrics_payload["overall"][
+        "val"
+    ]["coverage_with_prediction_interval"]
+    prediction_band["overall"]["mean_interval_width_f"] = metrics_payload["overall"]["val"][
         "mean_prediction_interval_width_f"
     ]
-    return predictions, metrics_by_split, prediction_band
+    for band_row in prediction_band["by_horizon"]:
+        step_metrics = metrics_payload["by_horizon"][str(int(band_row["horizon_step"]))]["val"]
+        band_row["empirical_coverage_reference_split"] = step_metrics[
+            "coverage_with_prediction_interval"
+        ]
+        band_row["mean_interval_width_f"] = step_metrics["mean_prediction_interval_width_f"]
+
+    return predictions, metrics_payload, prediction_band
 
 
-def estimate_future_timestamp(
+def estimate_future_timestamps(
     clean_df: pd.DataFrame,
-    horizon: int,
+    horizons: list[int],
     max_gap_minutes: int,
-) -> tuple[pd.Timestamp, float]:
+) -> tuple[list[dict[str, object]], float]:
     timestamps = pd.to_datetime(clean_df["observation_datetime"])
     diffs = timestamps.diff().dt.total_seconds().div(60.0)
     valid_diffs = diffs[(diffs > 0) & (diffs <= max_gap_minutes)]
@@ -577,10 +715,18 @@ def estimate_future_timestamp(
         step_minutes = 60.0
     else:
         step_minutes = float(valid_diffs.tail(min(24, len(valid_diffs))).median())
-    forecast_timestamp = pd.Timestamp(timestamps.iloc[-1]) + timedelta(
-        minutes=step_minutes * horizon
-    )
-    return forecast_timestamp, step_minutes
+    last_timestamp = pd.Timestamp(timestamps.iloc[-1])
+    forecast_rows: list[dict[str, object]] = []
+    for horizon_step in horizons:
+        forecast_rows.append(
+            {
+                "horizon_step": int(horizon_step),
+                "forecast_target_timestamp": (
+                    last_timestamp + timedelta(minutes=step_minutes * int(horizon_step))
+                ).strftime("%Y-%m-%d %H:%M:%S"),
+            }
+        )
+    return forecast_rows, step_minutes
 
 
 def main() -> None:
@@ -631,6 +777,14 @@ def main() -> None:
 
     compatibility_issues = validate_model_compatibility(gru_bundle, lightgbm_bundle)
     if compatibility_issues:
+        gru_horizons = weather_common.normalize_forecast_horizons(
+            gru_bundle["payload"].get("forecast_horizons"),
+            fallback_horizon=int(gru_bundle["payload"]["horizon"]),
+        )
+        lightgbm_horizons = weather_common.normalize_forecast_horizons(
+            lightgbm_bundle["metadata"].get("forecast_horizons"),
+            fallback_horizon=int(lightgbm_bundle["metadata"]["horizon"]),
+        )
         execution_manifest = build_execution_manifest(
             data_path=data_path,
             raw_df=raw_df,
@@ -650,6 +804,7 @@ def main() -> None:
             "gru_model": {
                 "lookback": int(gru_bundle["payload"]["lookback"]),
                 "horizon": int(gru_bundle["payload"]["horizon"]),
+                "forecast_horizons": gru_horizons,
                 "max_gap_minutes": int(gru_bundle["payload"]["max_gap_minutes"]),
                 "hidden_size": int(gru_bundle["hidden_size"]),
                 "num_layers": int(gru_bundle["num_layers"]),
@@ -657,8 +812,10 @@ def main() -> None:
             "lightgbm_model": {
                 "lookback": int(lightgbm_bundle["metadata"]["lookback"]),
                 "horizon": int(lightgbm_bundle["metadata"]["horizon"]),
+                "forecast_horizons": lightgbm_horizons,
                 "max_gap_minutes": int(lightgbm_bundle["metadata"]["max_gap_minutes"]),
                 "best_iteration": int(lightgbm_bundle["metadata"]["best_iteration"]),
+                "best_iterations": lightgbm_bundle["metadata"].get("best_iterations"),
             },
             "compatibility_issues": compatibility_issues,
             "ensemble_weights": None,
@@ -712,38 +869,67 @@ def main() -> None:
     )
     ensemble_predictions.to_csv(run_dir / "historical_ensemble_predictions.csv", index=False)
 
-    forecast_timestamp, estimated_step_minutes = estimate_future_timestamp(
+    forecast_horizons = weather_common.normalize_forecast_horizons(
+        gru_bundle["payload"].get("forecast_horizons"),
+        fallback_horizon=int(gru_bundle["payload"]["horizon"]),
+    )
+    forecast_rows, estimated_step_minutes = estimate_future_timestamps(
         current_clean_df,
-        horizon=int(gru_bundle["payload"]["horizon"]),
+        horizons=forecast_horizons,
         max_gap_minutes=min(
             int(gru_bundle["payload"]["max_gap_minutes"]),
             int(lightgbm_bundle["metadata"]["max_gap_minutes"]),
         ),
     )
 
-    gru_prediction = gru_model.build_live_prediction(current_clean_df, gru_bundle)
-    lightgbm_prediction = lightgbm_model.build_live_prediction(
-        current_clean_df,
-        lightgbm_bundle,
-    )
-    ensemble_prediction = (
-        float(ensemble_weights["gru_weight"]) * gru_prediction
-        + float(ensemble_weights["lightgbm_weight"]) * lightgbm_prediction
-    )
-    lower_interval, upper_interval = build_prediction_interval(
-        np.asarray([ensemble_prediction], dtype=np.float32),
-        prediction_band,
-    )
+    gru_prediction = np.asarray(
+        gru_model.build_live_prediction(current_clean_df, gru_bundle),
+        dtype=np.float32,
+    ).reshape(-1)
+    lightgbm_prediction = np.asarray(
+        lightgbm_model.build_live_prediction(
+            current_clean_df,
+            lightgbm_bundle,
+        ),
+        dtype=np.float32,
+    ).reshape(-1)
+    weight_by_horizon = {
+        int(row["horizon_step"]): row for row in ensemble_weights["by_horizon"]
+    }
+    band_by_horizon = {
+        int(row["horizon_step"]): row for row in prediction_band["by_horizon"]
+    }
+    live_forecast_rows: list[dict[str, object]] = []
+    for idx, forecast_row in enumerate(forecast_rows):
+        horizon_step = int(forecast_row["horizon_step"])
+        weights = weight_by_horizon[horizon_step]
+        ensemble_prediction = (
+            float(weights["gru_weight"]) * float(gru_prediction[idx])
+            + float(weights["lightgbm_weight"]) * float(lightgbm_prediction[idx])
+        )
+        lower_interval, upper_interval = build_prediction_interval(
+            np.asarray([ensemble_prediction], dtype=np.float32),
+            band_by_horizon[horizon_step],
+        )
+        live_forecast_rows.append(
+            {
+                "horizon_observations_ahead": horizon_step,
+                "forecast_target_timestamp": forecast_row["forecast_target_timestamp"],
+                "gru_weight": float(weights["gru_weight"]),
+                "lightgbm_weight": float(weights["lightgbm_weight"]),
+                "gru_prediction_f": float(gru_prediction[idx]),
+                "lightgbm_prediction_f": float(lightgbm_prediction[idx]),
+                "ensemble_prediction_f": float(ensemble_prediction),
+                "lower_prediction_interval_f": float(lower_interval[0]),
+                "upper_prediction_interval_f": float(upper_interval[0]),
+            }
+        )
+
     live_forecast: dict[str, object] | None = {
         "last_observation_datetime": str(current_clean_df.iloc[-1]["observation_datetime"]),
         "estimated_step_minutes": estimated_step_minutes,
-        "forecast_target_timestamp": forecast_timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-        "horizon_observations_ahead": int(gru_bundle["payload"]["horizon"]),
-        "gru_prediction_f": gru_prediction,
-        "lightgbm_prediction_f": lightgbm_prediction,
-        "ensemble_prediction_f": ensemble_prediction,
-        "lower_prediction_interval_f": float(lower_interval[0]),
-        "upper_prediction_interval_f": float(upper_interval[0]),
+        "forecast_horizons": forecast_horizons,
+        "forecasts": live_forecast_rows,
     }
     write_json(run_dir / "latest_live_forecast.json", live_forecast)
 
@@ -753,6 +939,7 @@ def main() -> None:
         "gru_model": {
             "lookback": int(gru_bundle["payload"]["lookback"]),
             "horizon": int(gru_bundle["payload"]["horizon"]),
+            "forecast_horizons": forecast_horizons,
             "max_gap_minutes": int(gru_bundle["payload"]["max_gap_minutes"]),
             "hidden_size": int(gru_bundle["hidden_size"]),
             "num_layers": int(gru_bundle["num_layers"]),
@@ -760,8 +947,10 @@ def main() -> None:
         "lightgbm_model": {
             "lookback": int(lightgbm_bundle["metadata"]["lookback"]),
             "horizon": int(lightgbm_bundle["metadata"]["horizon"]),
+            "forecast_horizons": forecast_horizons,
             "max_gap_minutes": int(lightgbm_bundle["metadata"]["max_gap_minutes"]),
             "best_iteration": int(lightgbm_bundle["metadata"]["best_iteration"]),
+            "best_iterations": lightgbm_bundle["metadata"].get("best_iterations"),
         },
         "compatibility_issues": compatibility_issues,
         "ensemble_weights": ensemble_weights,

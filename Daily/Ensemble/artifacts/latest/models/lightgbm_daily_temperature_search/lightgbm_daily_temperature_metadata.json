@@ -256,12 +256,37 @@
   "target_column": "temperature_f",
   "lookback": 96,
   "horizon": 6,
+  "forecast_horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "prediction_strategy": "direct_multi_horizon",
   "max_gap_minutes": 120,
-  "best_iteration": 356,
+  "best_iteration": 348,
+  "best_iterations": [
+    562,
+    589,
+    411,
+    430,
+    292,
+    348
+  ],
+  "model_paths": [
+    "lightgbm_daily_temperature.txt",
+    "lightgbm_daily_temperature_h02.txt",
+    "lightgbm_daily_temperature_h03.txt",
+    "lightgbm_daily_temperature_h04.txt",
+    "lightgbm_daily_temperature_h05.txt",
+    "lightgbm_daily_temperature_h06.txt"
+  ],
   "split_info": {
-    "train_end_timestamp": "2023-02-19 07:00:00",
-    "val_end_timestamp": "2024-12-28 23:00:00",
-    "total_rows": 118340,
+    "train_end_timestamp": "2023-02-20 06:30:00",
+    "val_end_timestamp": "2024-12-30 03:00:00",
+    "total_rows": 118372,
     "max_gap_minutes": 120
   },
   "feature_engineering": {
@@ -324,7 +349,7 @@
     "search_metric": "mae",
     "best_trial_id": 0,
     "best_trial_source": "baseline",
-    "best_search_score": 2.8604736798833015,
+    "best_search_score": 2.118131637573242,
     "best_params": {
       "learning_rate": 0.02,
       "num_leaves": 255,
@@ -336,6 +361,14 @@
       "lambda_l1": 0.1,
       "lambda_l2": 0.0,
       "min_gain_to_split": 0.1
-    }
+    },
+    "best_iterations": [
+      562,
+      589,
+      411,
+      430,
+      292,
+      348
+    ]
   }
 }

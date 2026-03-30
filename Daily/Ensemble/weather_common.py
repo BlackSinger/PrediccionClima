@@ -68,6 +68,28 @@ MODEL_FEATURES = [
 TARGET_COLUMN = "temperature_f"
 
 
+def default_forecast_horizons(max_horizon: int) -> list[int]:
+    if int(max_horizon) < 1:
+        raise ValueError("max_horizon debe ser >= 1.")
+    return list(range(1, int(max_horizon) + 1))
+
+
+def normalize_forecast_horizons(
+    forecast_horizons: object | None,
+    fallback_horizon: int,
+) -> list[int]:
+    if forecast_horizons is None:
+        return [int(fallback_horizon)]
+
+    if not isinstance(forecast_horizons, list) or not forecast_horizons:
+        raise ValueError("forecast_horizons debe ser una lista no vacia.")
+
+    normalized = sorted({int(step) for step in forecast_horizons})
+    if normalized[0] < 1:
+        raise ValueError("forecast_horizons solo admite pasos >= 1.")
+    return normalized
+
+
 def add_condition_flags(df: pd.DataFrame) -> pd.DataFrame:
     cond = df["condition"].fillna("").str.lower()
 

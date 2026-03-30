@@ -34,6 +34,17 @@ def get_default_train_config() -> dict[str, object]:
 DEFAULT_TRAIN_CONFIG = get_default_train_config()
 
 
+def resolve_training_horizons(horizon: int) -> list[int]:
+    return weather_common.default_forecast_horizons(int(horizon))
+
+
+def reshape_2d(values: np.ndarray) -> np.ndarray:
+    array = np.asarray(values, dtype=np.float32)
+    if array.ndim == 1:
+        return array.reshape(-1, 1)
+    return array
+
+
 def make_loader(
     x: np.ndarray,
     y: np.ndarray,
@@ -51,6 +62,7 @@ class GRUDailyTemperatureRegressor(nn.Module):
         hidden_size: int,
         num_layers: int,
         dropout: float,
+        output_size: int,
     ) -> None:
         super().__init__()
         effective_dropout = dropout if num_layers > 1 else 0.0
@@ -64,13 +76,12 @@ class GRUDailyTemperatureRegressor(nn.Module):
         self.head = nn.Sequential(
             nn.Linear(hidden_size, hidden_size // 2),
             nn.ReLU(),
-            nn.Linear(hidden_size // 2, 1),
+            nn.Linear(hidden_size // 2, output_size),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         _, hidden = self.gru(x)
-        output = self.head(hidden[-1])
-        return output.squeeze(-1)
+        return self.head(hidden[-1])
 
 
 def predict(
@@ -92,7 +103,7 @@ def predict(
 
 
 def denormalize(values: np.ndarray, mean: float, std: float) -> np.ndarray:
-    return values * std + mean
+    return np.asarray(values, dtype=np.float32) * std + mean
 
 
 def set_seed(seed: int) -> None:
@@ -103,18 +114,147 @@ def set_seed(seed: int) -> None:
         torch.cuda.manual_seed_all(seed)
 
 
+def build_multihorizon_metrics(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    forecast_horizons: list[int],
+) -> dict[str, object]:
+    y_true_2d = reshape_2d(y_true)
+    y_pred_2d = reshape_2d(y_pred)
+    by_horizon: dict[str, dict[str, float]] = {}
+    for idx, horizon_step in enumerate(forecast_horizons):
+        by_horizon[str(horizon_step)] = regression_metrics(
+            y_true_2d[:, idx],
+            y_pred_2d[:, idx],
+        )
+    return {
+        "overall": regression_metrics(y_true_2d.reshape(-1), y_pred_2d.reshape(-1)),
+        "by_horizon": by_horizon,
+    }
+
+
+def calibrate_multihorizon_prediction_bands(
+    residuals: np.ndarray,
+    forecast_horizons: list[int],
+    coverage: float,
+    reference_split: str,
+) -> dict[str, object]:
+    residuals_2d = reshape_2d(residuals)
+    by_horizon: list[dict[str, float | str | int]] = []
+    for idx, horizon_step in enumerate(forecast_horizons):
+        band = calibrate_prediction_interval(
+            residuals=residuals_2d[:, idx],
+            coverage=coverage,
+            reference_split=reference_split,
+        )
+        band["horizon_step"] = int(horizon_step)
+        by_horizon.append(band)
+    return {
+        "overall": calibrate_prediction_interval(
+            residuals=residuals_2d.reshape(-1),
+            coverage=coverage,
+            reference_split=reference_split,
+        ),
+        "by_horizon": by_horizon,
+    }
+
+
+def apply_multihorizon_prediction_bands(
+    y_pred: np.ndarray,
+    prediction_band: dict[str, object],
+    forecast_horizons: list[int],
+) -> tuple[np.ndarray, np.ndarray]:
+    y_pred_2d = reshape_2d(y_pred)
+    lower = np.empty_like(y_pred_2d, dtype=np.float32)
+    upper = np.empty_like(y_pred_2d, dtype=np.float32)
+    band_by_horizon = {
+        int(band["horizon_step"]): band for band in prediction_band["by_horizon"]
+    }
+    for idx, horizon_step in enumerate(forecast_horizons):
+        step_lower, step_upper = build_prediction_interval(
+            y_pred_2d[:, idx],
+            band_by_horizon[int(horizon_step)],
+        )
+        lower[:, idx] = step_lower
+        upper[:, idx] = step_upper
+    return lower, upper
+
+
+def add_interval_metrics(
+    metrics_payload: dict[str, object],
+    y_true: np.ndarray,
+    lower: np.ndarray,
+    upper: np.ndarray,
+    forecast_horizons: list[int],
+) -> None:
+    y_true_2d = reshape_2d(y_true)
+    lower_2d = reshape_2d(lower)
+    upper_2d = reshape_2d(upper)
+
+    for idx, horizon_step in enumerate(forecast_horizons):
+        metrics_payload["by_horizon"][str(horizon_step)][
+            "coverage_with_prediction_interval"
+        ] = float(
+            np.mean(
+                (y_true_2d[:, idx] >= lower_2d[:, idx])
+                & (y_true_2d[:, idx] <= upper_2d[:, idx])
+            )
+        )
+        metrics_payload["by_horizon"][str(horizon_step)][
+            "mean_prediction_interval_width_f"
+        ] = float(np.mean(upper_2d[:, idx] - lower_2d[:, idx]))
+
+    metrics_payload["overall"]["coverage_with_prediction_interval"] = float(
+        np.mean((y_true_2d >= lower_2d) & (y_true_2d <= upper_2d))
+    )
+    metrics_payload["overall"]["mean_prediction_interval_width_f"] = float(
+        np.mean(upper_2d - lower_2d)
+    )
+
+
+def build_prediction_frame(
+    split_name: str,
+    anchor_dates: np.ndarray,
+    target_dates: np.ndarray,
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    lower: np.ndarray,
+    upper: np.ndarray,
+    forecast_horizons: list[int],
+) -> pd.DataFrame:
+    y_true_2d = reshape_2d(y_true)
+    y_pred_2d = reshape_2d(y_pred)
+    lower_2d = reshape_2d(lower)
+    upper_2d = reshape_2d(upper)
+    sample_count = y_true_2d.shape[0]
+    horizon_count = len(forecast_horizons)
+    return pd.DataFrame(
+        {
+            "forecast_origin_datetime": np.repeat(pd.to_datetime(anchor_dates), horizon_count),
+            "observation_datetime": pd.to_datetime(target_dates.reshape(-1)),
+            "split": np.repeat(split_name, sample_count * horizon_count),
+            "horizon_step": np.tile(np.asarray(forecast_horizons, dtype=np.int32), sample_count),
+            "actual_temperature_f": y_true_2d.reshape(-1),
+            "predicted_temperature_f": y_pred_2d.reshape(-1),
+            "lower_prediction_interval_f": lower_2d.reshape(-1),
+            "upper_prediction_interval_f": upper_2d.reshape(-1),
+        }
+    )
+
+
 def build_sequences(
     df: pd.DataFrame,
     feature_cols: list[str],
     target_col: str,
     lookback: int,
-    horizon: int,
+    forecast_horizons: list[int],
     train_ratio: float,
     val_ratio: float,
     max_gap_minutes: int,
 ) -> tuple[dict[str, dict[str, np.ndarray]], dict[str, np.ndarray], dict[str, object]]:
+    max_horizon = max(int(step) for step in forecast_horizons)
     n_rows = len(df)
-    train_end = max(int(n_rows * train_ratio), lookback + horizon)
+    train_end = max(int(n_rows * train_ratio), lookback + max_horizon)
     val_end = int(n_rows * (train_ratio + val_ratio))
     val_end = max(val_end, train_end + 1)
     val_end = min(val_end, n_rows - 1)
@@ -139,16 +279,16 @@ def build_sequences(
     )
 
     buckets: dict[str, dict[str, list[object]]] = {
-        "train": {"x": [], "y": [], "date": []},
-        "val": {"x": [], "y": [], "date": []},
-        "test": {"x": [], "y": [], "date": []},
+        "train": {"x": [], "y": [], "anchor_date": [], "target_dates": []},
+        "val": {"x": [], "y": [], "anchor_date": [], "target_dates": []},
+        "test": {"x": [], "y": [], "anchor_date": [], "target_dates": []},
     }
-    required_run = lookback + horizon
+    required_run = lookback + max_horizon
     for target_idx in range(required_run - 1, n_rows):
         if run_lengths[target_idx] < required_run:
             continue
 
-        input_end = target_idx - horizon + 1
+        input_end = target_idx - max_horizon + 1
         input_start = input_end - lookback
         if input_start < 0:
             continue
@@ -160,9 +300,13 @@ def build_sequences(
         else:
             split = "test"
 
+        future_indices = [input_end + int(step) - 1 for step in forecast_horizons]
         buckets[split]["x"].append(features_scaled[input_start:input_end])
-        buckets[split]["y"].append(target_scaled[target_idx])
-        buckets[split]["date"].append(df.iloc[target_idx]["observation_datetime"])
+        buckets[split]["y"].append(target_scaled[future_indices])
+        buckets[split]["anchor_date"].append(df.iloc[input_end - 1]["observation_datetime"])
+        buckets[split]["target_dates"].append(
+            df.iloc[future_indices]["observation_datetime"].to_numpy(dtype="datetime64[ns]")
+        )
 
     arrays: dict[str, dict[str, np.ndarray]] = {}
     for split_name, split_values in buckets.items():
@@ -171,7 +315,8 @@ def build_sequences(
         arrays[split_name] = {
             "x": np.asarray(split_values["x"], dtype=np.float32),
             "y": np.asarray(split_values["y"], dtype=np.float32),
-            "date": np.asarray(split_values["date"], dtype="datetime64[ns]"),
+            "anchor_date": np.asarray(split_values["anchor_date"], dtype="datetime64[ns]"),
+            "target_dates": np.asarray(split_values["target_dates"], dtype="datetime64[ns]"),
         }
 
     scalers = {
@@ -321,17 +466,27 @@ def infer_gru_architecture(state_dict: dict[str, torch.Tensor]) -> dict[str, int
     num_layers = len(
         [key for key in state_dict if re.fullmatch(r"gru\.weight_ih_l\d+", key)]
     )
-    return {"hidden_size": hidden_size, "num_layers": num_layers}
+    output_size = int(state_dict["head.2.weight"].shape[0])
+    return {
+        "hidden_size": hidden_size,
+        "num_layers": num_layers,
+        "output_size": output_size,
+    }
 
 
 def load_bundle(gru_artifact_path: Path) -> dict[str, object]:
     payload = torch.load(gru_artifact_path, map_location="cpu", weights_only=False)
     architecture = infer_gru_architecture(payload["model_state_dict"])
+    forecast_horizons = weather_common.normalize_forecast_horizons(
+        payload.get("forecast_horizons"),
+        fallback_horizon=int(payload["horizon"]),
+    )
     model = GRUDailyTemperatureRegressor(
         input_size=len(payload["feature_columns"]),
         hidden_size=architecture["hidden_size"],
         num_layers=architecture["num_layers"],
         dropout=0.0,
+        output_size=architecture["output_size"],
     )
     model.load_state_dict(payload["model_state_dict"])
     model.eval()
@@ -340,6 +495,7 @@ def load_bundle(gru_artifact_path: Path) -> dict[str, object]:
         "model": model,
         "hidden_size": architecture["hidden_size"],
         "num_layers": architecture["num_layers"],
+        "forecast_horizons": forecast_horizons,
     }
 
 
@@ -350,7 +506,11 @@ def build_sequence_buckets(
     feature_cols = list(payload["feature_columns"])
     target_col = str(payload["target_column"])
     lookback = int(payload["lookback"])
-    horizon = int(payload["horizon"])
+    forecast_horizons = weather_common.normalize_forecast_horizons(
+        payload.get("forecast_horizons"),
+        fallback_horizon=int(payload["horizon"]),
+    )
+    max_horizon = max(int(step) for step in forecast_horizons)
     max_gap_minutes = int(payload["max_gap_minutes"])
     train_end_timestamp, val_end_timestamp = weather_common.get_split_cutoffs(
         payload["split_info"]
@@ -371,16 +531,16 @@ def build_sequence_buckets(
     )
 
     buckets: dict[str, dict[str, list[object]]] = {
-        "train": {"x": [], "y": [], "date": []},
-        "val": {"x": [], "y": [], "date": []},
-        "test": {"x": [], "y": [], "date": []},
+        "train": {"x": [], "y": [], "anchor_date": [], "target_dates": []},
+        "val": {"x": [], "y": [], "anchor_date": [], "target_dates": []},
+        "test": {"x": [], "y": [], "anchor_date": [], "target_dates": []},
     }
-    required_run = lookback + horizon
+    required_run = lookback + max_horizon
     for target_idx in range(required_run - 1, len(clean_df)):
         if run_lengths[target_idx] < required_run:
             continue
 
-        input_end = target_idx - horizon + 1
+        input_end = target_idx - max_horizon + 1
         input_start = input_end - lookback
         if input_start < 0:
             continue
@@ -391,16 +551,23 @@ def build_sequence_buckets(
             train_end_timestamp,
             val_end_timestamp,
         )
+        future_indices = [input_end + int(step) - 1 for step in forecast_horizons]
         buckets[split_name]["x"].append(features_scaled[input_start:input_end])
-        buckets[split_name]["y"].append(targets_scaled[target_idx])
-        buckets[split_name]["date"].append(target_timestamp.to_datetime64())
+        buckets[split_name]["y"].append(targets_scaled[future_indices])
+        buckets[split_name]["anchor_date"].append(
+            pd.Timestamp(clean_df.iloc[input_end - 1]["observation_datetime"]).to_datetime64()
+        )
+        buckets[split_name]["target_dates"].append(
+            clean_df.iloc[future_indices]["observation_datetime"].to_numpy(dtype="datetime64[ns]")
+        )
 
     arrays: dict[str, dict[str, np.ndarray]] = {}
     for split_name, values in buckets.items():
         arrays[split_name] = {
             "x": np.asarray(values["x"], dtype=np.float32),
             "y": np.asarray(values["y"], dtype=np.float32),
-            "date": np.asarray(values["date"], dtype="datetime64[ns]"),
+            "anchor_date": np.asarray(values["anchor_date"], dtype="datetime64[ns]"),
+            "target_dates": np.asarray(values["target_dates"], dtype="datetime64[ns]"),
         }
     return arrays
 
@@ -419,12 +586,12 @@ def predict_split(
     y_pred_scaled, y_true_scaled = predict(gru_bundle["model"], loader, torch.device("cpu"))
     payload = gru_bundle["payload"]
     y_pred = denormalize(
-        y_pred_scaled,
+        reshape_2d(y_pred_scaled),
         float(payload["target_mean"]),
         float(payload["target_std"]),
     )
     y_true = denormalize(
-        y_true_scaled,
+        reshape_2d(y_true_scaled),
         float(payload["target_mean"]),
         float(payload["target_std"]),
     )
@@ -434,7 +601,7 @@ def predict_split(
 def build_live_prediction(
     clean_df: pd.DataFrame,
     gru_bundle: dict[str, object],
-) -> float:
+) -> np.ndarray:
     payload = gru_bundle["payload"]
     lookback = int(payload["lookback"])
     run_lengths = weather_common.compute_run_lengths(
@@ -453,13 +620,11 @@ def build_live_prediction(
     scaled_window = (window - feature_mean) / feature_std
     x_tensor = torch.from_numpy(scaled_window).unsqueeze(0)
     with torch.no_grad():
-        pred_scaled = gru_bundle["model"](x_tensor).cpu().numpy().squeeze()
-    return float(
-        denormalize(
-            np.asarray([pred_scaled], dtype=np.float32),
-            float(payload["target_mean"]),
-            float(payload["target_std"]),
-        )[0]
+        pred_scaled = gru_bundle["model"](x_tensor).cpu().numpy()
+    return denormalize(
+        reshape_2d(pred_scaled).reshape(-1),
+        float(payload["target_mean"]),
+        float(payload["target_std"]),
     )
 
 
@@ -480,12 +645,13 @@ def train_and_save(
     clean_df = weather_common.clean_eda_data(raw_df)
     clean_df.to_csv(output_dir / "cleaned_weather_for_gru.csv", index=False)
 
+    forecast_horizons = resolve_training_horizons(int(train_config["horizon"]))
     sequence_data, scalers, split_info = build_sequences(
         df=clean_df,
         feature_cols=weather_common.MODEL_FEATURES,
         target_col=weather_common.TARGET_COLUMN,
         lookback=int(train_config["lookback"]),
-        horizon=int(train_config["horizon"]),
+        forecast_horizons=forecast_horizons,
         train_ratio=float(train_config["train_ratio"]),
         val_ratio=float(train_config["val_ratio"]),
         max_gap_minutes=int(train_config["max_gap_minutes"]),
@@ -516,6 +682,7 @@ def train_and_save(
         hidden_size=int(train_config["hidden_size"]),
         num_layers=int(train_config["num_layers"]),
         dropout=float(train_config["dropout"]),
+        output_size=len(forecast_horizons),
     ).to(device)
 
     model, history = train_model(
@@ -530,18 +697,19 @@ def train_and_save(
 
     target_mean = float(scalers["target_mean"][0])
     target_std = float(scalers["target_std"][0])
-    metrics: dict[str, dict[str, float]] = {}
+    metrics: dict[str, dict[str, object]] = {}
     prediction_frames: list[pd.DataFrame] = []
     prediction_loaders = {"train": train_loader, "val": val_loader, "test": test_loader}
     split_predictions: dict[str, dict[str, np.ndarray]] = {}
 
     for split_name, loader in prediction_loaders.items():
         y_pred_scaled, y_true_scaled = predict(model, loader, device)
-        y_pred = denormalize(y_pred_scaled, target_mean, target_std)
-        y_true = denormalize(y_true_scaled, target_mean, target_std)
-        metrics[split_name] = regression_metrics(y_true, y_pred)
+        y_pred = denormalize(reshape_2d(y_pred_scaled), target_mean, target_std)
+        y_true = denormalize(reshape_2d(y_true_scaled), target_mean, target_std)
+        metrics[split_name] = build_multihorizon_metrics(y_true, y_pred, forecast_horizons)
         split_predictions[split_name] = {
-            "date": sequence_data[split_name]["date"],
+            "anchor_date": sequence_data[split_name]["anchor_date"],
+            "target_dates": sequence_data[split_name]["target_dates"],
             "y_true": y_true,
             "y_pred": y_pred,
         }
@@ -549,47 +717,36 @@ def train_and_save(
     validation_residuals = (
         split_predictions["val"]["y_true"] - split_predictions["val"]["y_pred"]
     )
-    prediction_band = calibrate_prediction_interval(
+    prediction_band = calibrate_multihorizon_prediction_bands(
         residuals=validation_residuals,
+        forecast_horizons=forecast_horizons,
         coverage=float(train_config["interval_coverage"]),
         reference_split="val",
     )
-    val_lower, val_upper = build_prediction_interval(
-        split_predictions["val"]["y_pred"],
-        prediction_band,
-    )
-    prediction_band["empirical_coverage_reference_split"] = float(
-        np.mean(
-            (split_predictions["val"]["y_true"] >= val_lower)
-            & (split_predictions["val"]["y_true"] <= val_upper)
-        )
-    )
-    prediction_band["mean_interval_width_f"] = float(np.mean(val_upper - val_lower))
 
     for split_name, values in split_predictions.items():
-        lower_interval, upper_interval = build_prediction_interval(
+        lower_interval, upper_interval = apply_multihorizon_prediction_bands(
             values["y_pred"],
             prediction_band,
+            forecast_horizons,
         )
-        inside_interval = (values["y_true"] >= lower_interval) & (
-            values["y_true"] <= upper_interval
-        )
-        metrics[split_name]["coverage_with_prediction_interval"] = float(
-            np.mean(inside_interval)
-        )
-        metrics[split_name]["mean_prediction_interval_width_f"] = float(
-            np.mean(upper_interval - lower_interval)
+        add_interval_metrics(
+            metrics_payload=metrics[split_name],
+            y_true=values["y_true"],
+            lower=lower_interval,
+            upper=upper_interval,
+            forecast_horizons=forecast_horizons,
         )
         prediction_frames.append(
-            pd.DataFrame(
-                {
-                    "observation_datetime": pd.to_datetime(values["date"]),
-                    "split": split_name,
-                    "actual_temperature_f": values["y_true"],
-                    "predicted_temperature_f": values["y_pred"],
-                    "lower_prediction_interval_f": lower_interval,
-                    "upper_prediction_interval_f": upper_interval,
-                }
+            build_prediction_frame(
+                split_name=split_name,
+                anchor_dates=values["anchor_date"],
+                target_dates=values["target_dates"],
+                y_true=values["y_true"],
+                y_pred=values["y_pred"],
+                lower=lower_interval,
+                upper=upper_interval,
+                forecast_horizons=forecast_horizons,
             )
         )
 
@@ -603,6 +760,8 @@ def train_and_save(
         "target_column": weather_common.TARGET_COLUMN,
         "lookback": int(train_config["lookback"]),
         "horizon": int(train_config["horizon"]),
+        "forecast_horizons": forecast_horizons,
+        "prediction_strategy": "direct_multi_horizon",
         "max_gap_minutes": int(train_config["max_gap_minutes"]),
         "feature_mean": scalers["feature_mean"],
         "feature_std": scalers["feature_std"],
@@ -627,6 +786,7 @@ def train_and_save(
         "training_config": {
             "lookback": int(train_config["lookback"]),
             "horizon": int(train_config["horizon"]),
+            "forecast_horizons": forecast_horizons,
             "hidden_size": int(train_config["hidden_size"]),
             "num_layers": int(train_config["num_layers"]),
             "dropout": float(train_config["dropout"]),
