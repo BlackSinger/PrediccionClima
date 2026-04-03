@@ -4,7 +4,7 @@
   "search_metric": "mae",
   "best_trial_id": 0,
   "best_trial_source": "baseline",
-  "best_search_score": 2.1180672645568848,
+  "best_search_score": 2.1191155910491943,
   "best_params": {
     "learning_rate": 0.02,
     "num_leaves": 255,
@@ -18,11 +18,11 @@
     "min_gain_to_split": 0.1
   },
   "best_iterations": [
-    720,
-    478,
-    433,
-    418,
-    364,
-    361
+    718,
+    551,
+    516,
+    341,
+    427,
+    348
   ]
 }

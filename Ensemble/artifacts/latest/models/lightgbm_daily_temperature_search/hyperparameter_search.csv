@@ -1,2 +1,0 @@
-rank,trial_id,trial_source,search_metric,search_score,val_mae,val_rmse,val_mape,val_r2,best_iterations,learning_rate,num_leaves,max_depth,min_data_in_leaf,feature_fraction,bagging_fraction,bagging_freq,lambda_l1,lambda_l2,min_gain_to_split
-1,0,baseline,mae,2.1180672645568848,2.1180672645568848,2.9069421415709185,3.583195447921753,0.9488909528447904,"[720, 478, 433, 418, 364, 361]",0.02,255,8,40,0.7,1.0,3,0.1,0.0,0.1

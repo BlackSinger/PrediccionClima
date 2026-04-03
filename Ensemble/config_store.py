@@ -143,6 +143,7 @@ def _validate_config(config: Any) -> dict[str, Any]:
     _expect_bool(_expect_key(runtime, "update_data", "config.ensemble.runtime_defaults"), "config.ensemble.runtime_defaults.update_data")
     _expect_bool(_expect_key(runtime, "retrain_models", "config.ensemble.runtime_defaults"), "config.ensemble.runtime_defaults.retrain_models")
     _expect_int(_expect_key(runtime, "lightgbm_search_trials", "config.ensemble.runtime_defaults"), "config.ensemble.runtime_defaults.lightgbm_search_trials", minimum=0)
+    _expect_bool(_expect_key(runtime, "save_detailed_artifacts", "config.ensemble.runtime_defaults"), "config.ensemble.runtime_defaults.save_detailed_artifacts")
 
     gru = _expect_mapping(_expect_key(root, "gru", "config"), "config.gru")
     gru_defaults = _expect_mapping(

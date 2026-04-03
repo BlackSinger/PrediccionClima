@@ -16,6 +16,7 @@ import torch
 import config_store
 import gru_model
 import lightgbm_model
+import market_meta_model
 import weather_common
 import weather_update
 
@@ -133,6 +134,15 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Cantidad de trials de busqueda para LightGBM durante el reentrenamiento. "
             "En flujo operativo conviene dejarlo en 0 para usar los mejores params conocidos."
+        ),
+    )
+    parser.add_argument(
+        "--save-detailed-artifacts",
+        action=BooleanOptionalAction,
+        default=bool(RUNTIME_DEFAULTS["save_detailed_artifacts"]),
+        help=(
+            "Guarda CSVs historicos completos, datasets limpios de la corrida y snapshots "
+            "de modelos. Por defecto se desactiva para ahorrar espacio en disco."
         ),
     )
     return parser.parse_args()
@@ -331,6 +341,8 @@ def build_status_payload(
         "lightgbm_model": summary.get("lightgbm_model"),
         "ensemble_weights": summary.get("ensemble_weights"),
         "prediction_band": summary.get("prediction_band"),
+        "market_meta_model": summary.get("market_meta_model"),
+        "live_market_forecast": summary.get("live_market_forecast"),
         "live_forecast": live_forecast,
     }
 
@@ -780,7 +792,8 @@ def main() -> None:
         update_data=args.update_data,
     )
     current_clean_df = weather_common.clean_eda_data(raw_df)
-    current_clean_df.to_csv(run_dir / "cleaned_weather_current.csv", index=False)
+    if args.save_detailed_artifacts:
+        current_clean_df.to_csv(run_dir / "cleaned_weather_current.csv", index=False)
 
     retraining_summary: dict[str, object] | None = None
     if args.retrain_models:
@@ -796,11 +809,12 @@ def main() -> None:
         lightgbm_model_path,
         lightgbm_metadata_path,
     )
-    snapshot_model_artifacts(
-        run_dir=run_dir,
-        gru_artifact_path=gru_artifact_path,
-        lightgbm_model_path=lightgbm_model_path,
-    )
+    if args.save_detailed_artifacts:
+        snapshot_model_artifacts(
+            run_dir=run_dir,
+            gru_artifact_path=gru_artifact_path,
+            lightgbm_model_path=lightgbm_model_path,
+        )
 
     compatibility_issues = validate_model_compatibility(gru_bundle, lightgbm_bundle)
     if compatibility_issues:
@@ -849,6 +863,8 @@ def main() -> None:
             "ensemble_weights": None,
             "ensemble_metrics": None,
             "prediction_band": None,
+            "market_meta_model": None,
+            "live_market_forecast": None,
             "live_forecast": None,
         }
         status_payload = build_status_payload(
@@ -883,20 +899,26 @@ def main() -> None:
         lightgbm_clean_df=lightgbm_clean_df,
         batch_size=args.batch_size,
     )
-    historical_predictions.to_csv(run_dir / "historical_component_predictions.csv", index=False)
+    if args.save_detailed_artifacts:
+        historical_predictions.to_csv(
+            run_dir / "historical_component_predictions.csv",
+            index=False,
+        )
 
     ensemble_weights, weight_search = fit_ensemble_weights(
         historical_predictions=historical_predictions,
         weight_grid_step=args.weight_grid_step,
     )
-    weight_search.to_csv(run_dir / "ensemble_weight_search.csv", index=False)
+    if args.save_detailed_artifacts:
+        weight_search.to_csv(run_dir / "ensemble_weight_search.csv", index=False)
 
     ensemble_predictions, ensemble_metrics, prediction_band = apply_ensemble_to_history(
         historical_predictions,
         ensemble_weights,
         interval_coverage=float(SHARED_DEFAULTS["interval_coverage"]),
     )
-    ensemble_predictions.to_csv(run_dir / "historical_ensemble_predictions.csv", index=False)
+    if args.save_detailed_artifacts:
+        ensemble_predictions.to_csv(run_dir / "historical_ensemble_predictions.csv", index=False)
 
     forecast_horizons = weather_common.normalize_forecast_horizons(
         gru_bundle["payload"].get("forecast_horizons"),
@@ -962,6 +984,23 @@ def main() -> None:
     }
     write_json(run_dir / "latest_live_forecast.json", live_forecast)
 
+    market_meta_result = market_meta_model.fit_market_meta_model(
+        ensemble_predictions=ensemble_predictions,
+        clean_df=current_clean_df,
+        live_forecast=live_forecast,
+    )
+    if args.save_detailed_artifacts:
+        market_meta_result["threshold_metrics"].to_csv(
+            run_dir / "market_meta_threshold_metrics.csv",
+            index=False,
+        )
+        market_meta_result["feature_importance"].to_csv(
+            run_dir / "market_meta_feature_importance.csv",
+            index=False,
+        )
+    write_json(run_dir / "market_meta_summary.json", market_meta_result["summary"])
+    write_json(run_dir / "latest_market_forecast.json", market_meta_result["live_forecast"])
+
     summary = {
         "data_update": data_update_summary,
         "retraining": retraining_summary,
@@ -985,6 +1024,8 @@ def main() -> None:
         "ensemble_weights": ensemble_weights,
         "ensemble_metrics": ensemble_metrics,
         "prediction_band": prediction_band,
+        "market_meta_model": market_meta_result["summary"],
+        "live_market_forecast": market_meta_result["live_forecast"],
         "live_forecast": live_forecast,
     }
 

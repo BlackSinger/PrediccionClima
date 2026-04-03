@@ -26,7 +26,8 @@
       "headless": true,
       "update_data": true,
       "retrain_models": true,
-      "lightgbm_search_trials": 0
+      "lightgbm_search_trials": 0,
+      "save_detailed_artifacts": false
     }
   },
   "gru": {

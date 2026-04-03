@@ -1,0 +1,375 @@
+{
+  "forecast_origin_datetime": "2026-04-03 16:00:00",
+  "rounding_rule_for_market_bins": "round((daily_max_f - 32) * 5 / 9)",
+  "support": {
+    "lower_tail_c": 8,
+    "upper_tail_c": 42,
+    "thresholds_c": [
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42
+    ]
+  },
+  "current_state_f": {
+    "temperature_f": 88.0,
+    "max_temperature_so_far_today_f": 88.0,
+    "min_temperature_so_far_today_f": 66.0
+  },
+  "forecast_features_f": {
+    "ensemble_peak_forecast_f": 86.07031509399415,
+    "same_day_peak_forecast_f": 86.07031509399415,
+    "upper_peak_forecast_f": 89.27992248535156,
+    "same_day_upper_peak_forecast_f": 89.27992248535156,
+    "same_day_forecast_count": 6,
+    "next_day_forecast_count": 0
+  },
+  "probabilities_at_or_above_c": [
+    {
+      "threshold_c": 9,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 10,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 11,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 12,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 13,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 14,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 15,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 16,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 17,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 18,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 19,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 20,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 21,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 22,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 23,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 24,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 25,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 26,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 27,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 28,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 29,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 30,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 31,
+      "probability_daily_max_at_or_above": 1.0
+    },
+    {
+      "threshold_c": 32,
+      "probability_daily_max_at_or_above": 0.01592356687898089
+    },
+    {
+      "threshold_c": 33,
+      "probability_daily_max_at_or_above": 0.0
+    },
+    {
+      "threshold_c": 34,
+      "probability_daily_max_at_or_above": 0.0
+    },
+    {
+      "threshold_c": 35,
+      "probability_daily_max_at_or_above": 0.0
+    },
+    {
+      "threshold_c": 36,
+      "probability_daily_max_at_or_above": 0.0
+    },
+    {
+      "threshold_c": 37,
+      "probability_daily_max_at_or_above": 0.0
+    },
+    {
+      "threshold_c": 38,
+      "probability_daily_max_at_or_above": 0.0
+    },
+    {
+      "threshold_c": 39,
+      "probability_daily_max_at_or_above": 0.0
+    },
+    {
+      "threshold_c": 40,
+      "probability_daily_max_at_or_above": 0.0
+    },
+    {
+      "threshold_c": 41,
+      "probability_daily_max_at_or_above": 0.0
+    },
+    {
+      "threshold_c": 42,
+      "probability_daily_max_at_or_above": 0.0
+    }
+  ],
+  "market_bin_probabilities": [
+    {
+      "market_bin": "8C_or_below",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "9C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "10C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "11C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "12C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "13C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "14C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "15C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "16C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "17C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "18C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "19C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "20C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "21C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "22C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "23C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "24C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "25C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "26C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "27C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "28C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "29C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "30C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "31C",
+      "probability": 0.9840764331210191
+    },
+    {
+      "market_bin": "32C",
+      "probability": 0.01592356687898089
+    },
+    {
+      "market_bin": "33C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "34C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "35C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "36C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "37C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "38C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "39C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "40C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "41C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "42C_or_above",
+      "probability": 0.0
+    }
+  ],
+  "top_market_bins": [
+    {
+      "market_bin": "31C",
+      "probability": 0.9840764331210191
+    },
+    {
+      "market_bin": "32C",
+      "probability": 0.01592356687898089
+    },
+    {
+      "market_bin": "10C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "11C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "12C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "13C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "14C",
+      "probability": 0.0
+    },
+    {
+      "market_bin": "15C",
+      "probability": 0.0
+    }
+  ],
+  "most_likely_market_bin": {
+    "market_bin": "31C",
+    "probability": 0.9840764331210191
+  }
+}
