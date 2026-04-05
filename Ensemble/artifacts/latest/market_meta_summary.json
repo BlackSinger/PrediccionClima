@@ -44,12 +44,12 @@
     ]
   },
   "dataset": {
-    "row_count": 115178,
+    "row_count": 115209,
     "feature_count": 96,
     "split_counts": {
       "train": 85932,
-      "val": 17398,
-      "test": 11848
+      "val": 17426,
+      "test": 11851
     },
     "split_periods": {
       "train": {
@@ -58,59 +58,63 @@
       },
       "val": {
         "start": "2023-02-25 22:00:00",
-        "end": "2025-01-02 13:05:00"
+        "end": "2025-01-03 16:00:00"
       },
       "test": {
-        "start": "2025-01-02 14:00:00",
-        "end": "2026-04-03 10:00:00"
+        "start": "2025-01-03 17:00:00",
+        "end": "2026-04-04 09:00:00"
       }
     }
   },
   "metrics": {
     "cumulative_thresholds": {
       "test": {
-        "mean_positive_rate": 0.4891691821900941,
-        "mean_brier": 0.021525674218694765,
-        "mean_logloss": 0.07255509571867766
+        "mean_positive_rate": 0.48900068001211117,
+        "mean_brier": 0.021584362734440976,
+        "mean_logloss": 0.07208948677791473
       },
       "train": {
         "mean_positive_rate": 0.42713937970104954,
-        "mean_brier": 0.013957378810865567,
-        "mean_logloss": 0.047600795235314394
+        "mean_brier": 0.014185704628451498,
+        "mean_logloss": 0.04820389242822399
       },
       "val": {
-        "mean_positive_rate": 0.4168988321849029,
-        "mean_brier": 0.02005594884484737,
-        "mean_logloss": 0.06465906064924985
+        "mean_positive_rate": 0.4172770910269307,
+        "mean_brier": 0.020102676200674012,
+        "mean_logloss": 0.06478814796432994
       }
     },
     "market_bins": {
       "val": {
-        "top1_accuracy": 0.5260949534429245,
-        "mean_true_bin_probability": 0.48363143625431976,
-        "multiclass_logloss": 1.6839195004474496
+        "top1_accuracy": 0.5321358889016412,
+        "mean_true_bin_probability": 0.48343603828894205,
+        "multiclass_logloss": 1.7099957361555835
       },
       "test": {
-        "top1_accuracy": 0.5196657663740716,
-        "mean_true_bin_probability": 0.4796636136066214,
-        "multiclass_logloss": 2.0680183945297745
+        "top1_accuracy": 0.5172559277698084,
+        "mean_true_bin_probability": 0.4789757013091116,
+        "multiclass_logloss": 2.0491423830564326
       }
     }
   },
   "live_summary": {
-    "forecast_origin_datetime": "2026-04-03 16:00:00",
+    "forecast_origin_datetime": "2026-04-04 15:00:00",
     "most_likely_market_bin": {
-      "market_bin": "31C",
-      "probability": 0.9840764331210191
+      "market_bin": "20C",
+      "probability": 0.8005249343832022
     },
     "top_market_bins": [
       {
-        "market_bin": "31C",
-        "probability": 0.9840764331210191
+        "market_bin": "20C",
+        "probability": 0.8005249343832022
       },
       {
-        "market_bin": "32C",
-        "probability": 0.01592356687898089
+        "market_bin": "21C",
+        "probability": 0.19291768856761757
+      },
+      {
+        "market_bin": "22C",
+        "probability": 0.006557377049180328
       },
       {
         "market_bin": "10C",
@@ -131,97 +135,93 @@
       {
         "market_bin": "14C",
         "probability": 0.0
-      },
-      {
-        "market_bin": "15C",
-        "probability": 0.0
       }
     ]
   },
   "top_features": [
     {
       "feature": "max_temperature_so_far_today_f",
-      "gain_importance": 6287696.518538611,
-      "split_importance": 6623.0,
-      "mean_gain_importance": 184932.25054525328,
-      "mean_split_importance": 194.7941176470588
+      "gain_importance": 6104118.408159894,
+      "split_importance": 6526.0,
+      "mean_gain_importance": 179532.89435764393,
+      "mean_split_importance": 191.94117647058823
     },
     {
       "feature": "ensemble_pred_max_f",
-      "gain_importance": 1662959.8118005125,
-      "split_importance": 1540.0,
-      "mean_gain_importance": 48910.582700015075,
-      "mean_split_importance": 45.294117647058826
+      "gain_importance": 2082637.194613687,
+      "split_importance": 1503.0,
+      "mean_gain_importance": 61254.03513569668,
+      "mean_split_importance": 44.205882352941174
     },
     {
       "feature": "ensemble_prediction_h06_f",
-      "gain_importance": 1408469.784841507,
-      "split_importance": 2134.0,
-      "mean_gain_importance": 41425.581907103144,
-      "mean_split_importance": 62.76470588235294
+      "gain_importance": 1249160.797750127,
+      "split_importance": 1989.0,
+      "mean_gain_importance": 36740.02346323903,
+      "mean_split_importance": 58.5
     },
     {
       "feature": "day_of_year_cos",
-      "gain_importance": 830824.7957724109,
-      "split_importance": 8956.0,
-      "mean_gain_importance": 24436.02340507091,
-      "mean_split_importance": 263.4117647058824
+      "gain_importance": 795482.4914809302,
+      "split_importance": 8535.0,
+      "mean_gain_importance": 23396.543867086184,
+      "mean_split_importance": 251.02941176470588
     },
     {
       "feature": "peak_lower_interval_f",
-      "gain_importance": 628307.9569797996,
-      "split_importance": 1403.0,
-      "mean_gain_importance": 18479.645793523516,
-      "mean_split_importance": 41.26470588235294
+      "gain_importance": 535996.3754170107,
+      "split_importance": 1518.0,
+      "mean_gain_importance": 15764.599276970905,
+      "mean_split_importance": 44.64705882352941
     },
     {
       "feature": "hours_since_midnight",
-      "gain_importance": 539506.6722179956,
-      "split_importance": 3160.0,
-      "mean_gain_importance": 15867.843300529283,
-      "mean_split_importance": 92.94117647058823
+      "gain_importance": 508158.42696241447,
+      "split_importance": 3204.0,
+      "mean_gain_importance": 14945.836087129837,
+      "mean_split_importance": 94.23529411764706
     },
     {
       "feature": "same_day_peak_upper_interval_f",
-      "gain_importance": 487306.30052996427,
-      "split_importance": 1734.0,
-      "mean_gain_importance": 14332.538250881302,
-      "mean_split_importance": 51.0
+      "gain_importance": 478599.18477660825,
+      "split_importance": 1724.0,
+      "mean_gain_importance": 14076.446611076713,
+      "mean_split_importance": 50.705882352941174
     },
     {
       "feature": "hour",
-      "gain_importance": 443677.56856736145,
-      "split_importance": 1219.0,
-      "mean_gain_importance": 13049.340251981219,
-      "mean_split_importance": 35.85294117647059
-    },
-    {
-      "feature": "peak_upper_interval_f",
-      "gain_importance": 324579.56816201704,
-      "split_importance": 1546.0,
-      "mean_gain_importance": 9546.457887118147,
-      "mean_split_importance": 45.470588235294116
-    },
-    {
-      "feature": "min_temperature_so_far_today_f",
-      "gain_importance": 317224.0169683349,
-      "split_importance": 3531.0,
-      "mean_gain_importance": 9330.118146127497,
-      "mean_split_importance": 103.8529411764706
+      "gain_importance": 437313.6990859534,
+      "split_importance": 1171.0,
+      "mean_gain_importance": 12862.1676201751,
+      "mean_split_importance": 34.44117647058823
     },
     {
       "feature": "hours_remaining_in_day",
-      "gain_importance": 250077.37633790926,
-      "split_importance": 1030.0,
-      "mean_gain_importance": 7355.216951114978,
-      "mean_split_importance": 30.294117647058822
+      "gain_importance": 290261.34914921084,
+      "split_importance": 1061.0,
+      "mean_gain_importance": 8537.098504388554,
+      "mean_split_importance": 31.205882352941178
     },
     {
       "feature": "same_day_pred_max_f",
-      "gain_importance": 227771.60691795545,
-      "split_importance": 1342.0,
-      "mean_gain_importance": 6699.164909351631,
-      "mean_split_importance": 39.470588235294116
+      "gain_importance": 287618.8406705787,
+      "split_importance": 1485.0,
+      "mean_gain_importance": 8459.377666781727,
+      "mean_split_importance": 43.6764705882353
+    },
+    {
+      "feature": "same_day_upper_max_f",
+      "gain_importance": 286993.2921730724,
+      "split_importance": 900.0,
+      "mean_gain_importance": 8440.979181560953,
+      "mean_split_importance": 26.470588235294116
+    },
+    {
+      "feature": "peak_upper_interval_f",
+      "gain_importance": 283917.82729109505,
+      "split_importance": 1336.0,
+      "mean_gain_importance": 8350.52433209103,
+      "mean_split_importance": 39.294117647058826
     }
   ]
 }

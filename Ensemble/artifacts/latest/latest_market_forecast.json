@@ -1,5 +1,5 @@
 {
-  "forecast_origin_datetime": "2026-04-03 16:00:00",
+  "forecast_origin_datetime": "2026-04-04 15:00:00",
   "rounding_rule_for_market_bins": "round((daily_max_f - 32) * 5 / 9)",
   "support": {
     "lower_tail_c": 8,
@@ -42,15 +42,15 @@
     ]
   },
   "current_state_f": {
-    "temperature_f": 88.0,
-    "max_temperature_so_far_today_f": 88.0,
-    "min_temperature_so_far_today_f": 66.0
+    "temperature_f": 68.0,
+    "max_temperature_so_far_today_f": 68.0,
+    "min_temperature_so_far_today_f": 57.0
   },
   "forecast_features_f": {
-    "ensemble_peak_forecast_f": 86.07031509399415,
-    "same_day_peak_forecast_f": 86.07031509399415,
-    "upper_peak_forecast_f": 89.27992248535156,
-    "same_day_upper_peak_forecast_f": 89.27992248535156,
+    "ensemble_peak_forecast_f": 67.86933219909668,
+    "same_day_peak_forecast_f": 67.86933219909668,
+    "upper_peak_forecast_f": 71.37117767333984,
+    "same_day_upper_peak_forecast_f": 71.37117767333984,
     "same_day_forecast_count": 6,
     "next_day_forecast_count": 0
   },
@@ -105,51 +105,51 @@
     },
     {
       "threshold_c": 21,
-      "probability_daily_max_at_or_above": 1.0
+      "probability_daily_max_at_or_above": 0.1994750656167979
     },
     {
       "threshold_c": 22,
-      "probability_daily_max_at_or_above": 1.0
+      "probability_daily_max_at_or_above": 0.006557377049180328
     },
     {
       "threshold_c": 23,
-      "probability_daily_max_at_or_above": 1.0
+      "probability_daily_max_at_or_above": 0.0
     },
     {
       "threshold_c": 24,
-      "probability_daily_max_at_or_above": 1.0
+      "probability_daily_max_at_or_above": 0.0
     },
     {
       "threshold_c": 25,
-      "probability_daily_max_at_or_above": 1.0
+      "probability_daily_max_at_or_above": 0.0
     },
     {
       "threshold_c": 26,
-      "probability_daily_max_at_or_above": 1.0
+      "probability_daily_max_at_or_above": 0.0
     },
     {
       "threshold_c": 27,
-      "probability_daily_max_at_or_above": 1.0
+      "probability_daily_max_at_or_above": 0.0
     },
     {
       "threshold_c": 28,
-      "probability_daily_max_at_or_above": 1.0
+      "probability_daily_max_at_or_above": 0.0
     },
     {
       "threshold_c": 29,
-      "probability_daily_max_at_or_above": 1.0
+      "probability_daily_max_at_or_above": 0.0
     },
     {
       "threshold_c": 30,
-      "probability_daily_max_at_or_above": 1.0
+      "probability_daily_max_at_or_above": 0.0
     },
     {
       "threshold_c": 31,
-      "probability_daily_max_at_or_above": 1.0
+      "probability_daily_max_at_or_above": 0.0
     },
     {
       "threshold_c": 32,
-      "probability_daily_max_at_or_above": 0.01592356687898089
+      "probability_daily_max_at_or_above": 0.0
     },
     {
       "threshold_c": 33,
@@ -243,15 +243,15 @@
     },
     {
       "market_bin": "20C",
-      "probability": 0.0
+      "probability": 0.8005249343832022
     },
     {
       "market_bin": "21C",
-      "probability": 0.0
+      "probability": 0.19291768856761757
     },
     {
       "market_bin": "22C",
-      "probability": 0.0
+      "probability": 0.006557377049180328
     },
     {
       "market_bin": "23C",
@@ -287,11 +287,11 @@
     },
     {
       "market_bin": "31C",
-      "probability": 0.9840764331210191
+      "probability": 0.0
     },
     {
       "market_bin": "32C",
-      "probability": 0.01592356687898089
+      "probability": 0.0
     },
     {
       "market_bin": "33C",
@@ -336,12 +336,16 @@
   ],
   "top_market_bins": [
     {
-      "market_bin": "31C",
-      "probability": 0.9840764331210191
+      "market_bin": "20C",
+      "probability": 0.8005249343832022
     },
     {
-      "market_bin": "32C",
-      "probability": 0.01592356687898089
+      "market_bin": "21C",
+      "probability": 0.19291768856761757
+    },
+    {
+      "market_bin": "22C",
+      "probability": 0.006557377049180328
     },
     {
       "market_bin": "10C",
@@ -362,14 +366,10 @@
     {
       "market_bin": "14C",
       "probability": 0.0
-    },
-    {
-      "market_bin": "15C",
-      "probability": 0.0
     }
   ],
   "most_likely_market_bin": {
-    "market_bin": "31C",
-    "probability": 0.9840764331210191
+    "market_bin": "20C",
+    "probability": 0.8005249343832022
   }
 }
