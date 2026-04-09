@@ -1,0 +1,80 @@
+{
+  "last_observation_datetime": "2026-04-05 12:00:00",
+  "estimated_step_minutes": 60.0,
+  "forecast_horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "forecasts": [
+    {
+      "horizon_observations_ahead": 1,
+      "forecast_target_timestamp": "2026-04-05 13:00:00",
+      "gru_weight": 0.15,
+      "lightgbm_weight": 0.85,
+      "gru_prediction_f": 64.68692016601562,
+      "lightgbm_prediction_f": 65.50932312011719,
+      "ensemble_prediction_f": 65.38596267700196,
+      "lower_prediction_interval_f": 62.07631301879883,
+      "upper_prediction_interval_f": 68.60244750976562
+    },
+    {
+      "horizon_observations_ahead": 2,
+      "forecast_target_timestamp": "2026-04-05 14:00:00",
+      "gru_weight": 0.29,
+      "lightgbm_weight": 0.71,
+      "gru_prediction_f": 66.19322967529297,
+      "lightgbm_prediction_f": 66.11566162109375,
+      "ensemble_prediction_f": 66.13815635681152,
+      "lower_prediction_interval_f": 61.604530334472656,
+      "upper_prediction_interval_f": 70.5641860961914
+    },
+    {
+      "horizon_observations_ahead": 3,
+      "forecast_target_timestamp": "2026-04-05 15:00:00",
+      "gru_weight": 0.39,
+      "lightgbm_weight": 0.61,
+      "gru_prediction_f": 66.50932312011719,
+      "lightgbm_prediction_f": 66.00947570800781,
+      "ensemble_prediction_f": 66.20441619873047,
+      "lower_prediction_interval_f": 60.71795654296875,
+      "upper_prediction_interval_f": 71.48377227783203
+    },
+    {
+      "horizon_observations_ahead": 4,
+      "forecast_target_timestamp": "2026-04-05 16:00:00",
+      "gru_weight": 0.43,
+      "lightgbm_weight": 0.5700000000000001,
+      "gru_prediction_f": 66.64474487304688,
+      "lightgbm_prediction_f": 66.42377471923828,
+      "ensemble_prediction_f": 66.51879188537598,
+      "lower_prediction_interval_f": 60.23371124267578,
+      "upper_prediction_interval_f": 72.59498596191406
+    },
+    {
+      "horizon_observations_ahead": 5,
+      "forecast_target_timestamp": "2026-04-05 17:00:00",
+      "gru_weight": 0.45,
+      "lightgbm_weight": 0.55,
+      "gru_prediction_f": 65.16316223144531,
+      "lightgbm_prediction_f": 65.7364501953125,
+      "ensemble_prediction_f": 65.47847061157228,
+      "lower_prediction_interval_f": 58.51578903198242,
+      "upper_prediction_interval_f": 72.01690673828125
+    },
+    {
+      "horizon_observations_ahead": 6,
+      "forecast_target_timestamp": "2026-04-05 18:00:00",
+      "gru_weight": 0.45,
+      "lightgbm_weight": 0.55,
+      "gru_prediction_f": 63.8066520690918,
+      "lightgbm_prediction_f": 63.87785339355469,
+      "ensemble_prediction_f": 63.84581279754639,
+      "lower_prediction_interval_f": 56.32314682006836,
+      "upper_prediction_interval_f": 71.06885528564453
+    }
+  ]
+}

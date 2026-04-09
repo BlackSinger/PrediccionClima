@@ -1,0 +1,227 @@
+{
+  "model_type": "threshold_lightgbm_with_isotonic_calibration",
+  "target_definition": "final_daily_max_same_day_bucketed_to_integer_celsius",
+  "rounding_rule_for_market_bins": "round((daily_max_f - 32) * 5 / 9)",
+  "support": {
+    "lower_tail_c": 8,
+    "upper_tail_c": 42,
+    "threshold_count": 34,
+    "thresholds_c": [
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42
+    ]
+  },
+  "dataset": {
+    "row_count": 115325,
+    "feature_count": 96,
+    "split_counts": {
+      "train": 85972,
+      "val": 17490,
+      "test": 11863
+    },
+    "split_periods": {
+      "train": {
+        "start": "2014-01-04 07:30:00",
+        "end": "2023-02-27 13:00:00"
+      },
+      "val": {
+        "start": "2023-02-27 14:00:00",
+        "end": "2025-01-07 23:00:00"
+      },
+      "test": {
+        "start": "2025-01-08 00:00:00",
+        "end": "2026-04-08 05:00:00"
+      }
+    }
+  },
+  "metrics": {
+    "cumulative_thresholds": {
+      "test": {
+        "mean_positive_rate": 0.4861928586658468,
+        "mean_brier": 0.02193914688902861,
+        "mean_logloss": 0.0732145658714667
+      },
+      "train": {
+        "mean_positive_rate": 0.4272328063035571,
+        "mean_brier": 0.013950916066980443,
+        "mean_logloss": 0.04760050842967559
+      },
+      "val": {
+        "mean_positive_rate": 0.4180271079272189,
+        "mean_brier": 0.01999216146716209,
+        "mean_logloss": 0.06440776947012239
+      }
+    },
+    "market_bins": {
+      "val": {
+        "top1_accuracy": 0.5261863922241281,
+        "mean_true_bin_probability": 0.4831731735207076,
+        "multiclass_logloss": 1.7308084393817174
+      },
+      "test": {
+        "top1_accuracy": 0.5160583326308691,
+        "mean_true_bin_probability": 0.4773613045479582,
+        "multiclass_logloss": 2.103360992529569
+      }
+    }
+  },
+  "live_summary": {
+    "forecast_origin_datetime": "2026-04-08 11:00:00",
+    "most_likely_market_bin": {
+      "market_bin": "22C",
+      "probability": 0.29096966911764705
+    },
+    "top_market_bins": [
+      {
+        "market_bin": "22C",
+        "probability": 0.29096966911764705
+      },
+      {
+        "market_bin": "20C",
+        "probability": 0.19182825484764543
+      },
+      {
+        "market_bin": "21C",
+        "probability": 0.15650154798761612
+      },
+      {
+        "market_bin": "19C",
+        "probability": 0.15133812885354303
+      },
+      {
+        "market_bin": "23C",
+        "probability": 0.103515625
+      },
+      {
+        "market_bin": "24C",
+        "probability": 0.07152777777777777
+      },
+      {
+        "market_bin": "18C",
+        "probability": 0.012096774193548376
+      },
+      {
+        "market_bin": "28C",
+        "probability": 0.009523809523809525
+      }
+    ]
+  },
+  "top_features": [
+    {
+      "feature": "max_temperature_so_far_today_f",
+      "gain_importance": 6143768.512090141,
+      "split_importance": 6914.0,
+      "mean_gain_importance": 180699.07388500415,
+      "mean_split_importance": 203.35294117647058
+    },
+    {
+      "feature": "ensemble_pred_max_f",
+      "gain_importance": 1619935.530958918,
+      "split_importance": 1551.0,
+      "mean_gain_importance": 47645.16267526229,
+      "mean_split_importance": 45.61764705882353
+    },
+    {
+      "feature": "ensemble_prediction_h06_f",
+      "gain_importance": 1152876.913945274,
+      "split_importance": 1969.0,
+      "mean_gain_importance": 33908.14452780218,
+      "mean_split_importance": 57.911764705882355
+    },
+    {
+      "feature": "peak_lower_interval_f",
+      "gain_importance": 1020424.5168777986,
+      "split_importance": 1525.0,
+      "mean_gain_importance": 30012.48579052349,
+      "mean_split_importance": 44.85294117647059
+    },
+    {
+      "feature": "day_of_year_cos",
+      "gain_importance": 822426.2981908873,
+      "split_importance": 9141.0,
+      "mean_gain_importance": 24189.008770320215,
+      "mean_split_importance": 268.8529411764706
+    },
+    {
+      "feature": "hours_since_midnight",
+      "gain_importance": 549928.9743824129,
+      "split_importance": 3194.0,
+      "mean_gain_importance": 16174.381599482731,
+      "mean_split_importance": 93.94117647058823
+    },
+    {
+      "feature": "same_day_peak_upper_interval_f",
+      "gain_importance": 513815.03394577815,
+      "split_importance": 1905.0,
+      "mean_gain_importance": 15112.206880758182,
+      "mean_split_importance": 56.029411764705884
+    },
+    {
+      "feature": "hour",
+      "gain_importance": 434086.3267569416,
+      "split_importance": 1261.0,
+      "mean_gain_importance": 12767.24490461593,
+      "mean_split_importance": 37.088235294117645
+    },
+    {
+      "feature": "min_temperature_so_far_today_f",
+      "gain_importance": 320524.0904987734,
+      "split_importance": 3653.0,
+      "mean_gain_importance": 9427.179132316864,
+      "mean_split_importance": 107.44117647058823
+    },
+    {
+      "feature": "peak_upper_interval_f",
+      "gain_importance": 309419.5343375485,
+      "split_importance": 1385.0,
+      "mean_gain_importance": 9100.574539339661,
+      "mean_split_importance": 40.73529411764706
+    },
+    {
+      "feature": "hours_remaining_in_day",
+      "gain_importance": 251844.88730316362,
+      "split_importance": 1072.0,
+      "mean_gain_importance": 7407.202567740106,
+      "mean_split_importance": 31.529411764705884
+    },
+    {
+      "feature": "same_day_upper_max_f",
+      "gain_importance": 246828.933449969,
+      "split_importance": 1012.0,
+      "mean_gain_importance": 7259.674513234382,
+      "mean_split_importance": 29.764705882352942
+    }
+  ]
+}
