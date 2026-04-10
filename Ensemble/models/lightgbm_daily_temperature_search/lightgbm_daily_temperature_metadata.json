@@ -266,14 +266,14 @@
   ],
   "prediction_strategy": "direct_multi_horizon",
   "max_gap_minutes": 120,
-  "best_iteration": 339,
+  "best_iteration": 306,
   "best_iterations": [
-    687,
-    477,
-    345,
-    347,
-    343,
-    339
+    662,
+    480,
+    329,
+    364,
+    293,
+    306
   ],
   "model_paths": [
     "lightgbm_daily_temperature.txt",
@@ -284,9 +284,9 @@
     "lightgbm_daily_temperature_h06.txt"
   ],
   "split_info": {
-    "train_end_timestamp": "2023-02-28 15:00:00",
-    "val_end_timestamp": "2025-01-09 05:00:00",
-    "total_rows": 118648,
+    "train_end_timestamp": "2023-03-01 09:00:00",
+    "val_end_timestamp": "2025-01-10 02:00:00",
+    "total_rows": 118672,
     "max_gap_minutes": 120
   },
   "feature_engineering": {
@@ -349,7 +349,7 @@
     "search_metric": "mae",
     "best_trial_id": 0,
     "best_trial_source": "baseline",
-    "best_search_score": 2.1256532669067383,
+    "best_search_score": 2.121952772140503,
     "best_params": {
       "learning_rate": 0.02,
       "num_leaves": 255,
@@ -363,12 +363,12 @@
       "min_gain_to_split": 0.1
     },
     "best_iterations": [
-      687,
-      477,
-      345,
-      347,
-      343,
-      339
+      662,
+      480,
+      329,
+      364,
+      293,
+      306
     ]
   }
 }
