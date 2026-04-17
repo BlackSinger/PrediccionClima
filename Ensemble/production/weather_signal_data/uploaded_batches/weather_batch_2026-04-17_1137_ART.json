@@ -1,0 +1,57 @@
+{
+  "batchId": "weather_batch_2026-04-17_1137_ART",
+  "generatedAt": "2026-04-17T11:38:32-03:00",
+  "windowStartBuenosAires": "2026-04-17T11:37:00-03:00",
+  "windowEndBuenosAires": "2026-04-17T11:38:00-03:00",
+  "stationCode": "SAEZ",
+  "sourceUrls": [
+    "https://www.wunderground.com/weather/ar/ezeiza/SAEZ"
+  ],
+  "readingCount": 2,
+  "readings": [
+    {
+      "collected_at_buenos_aires": "2026-04-17T11:37:22-03:00",
+      "source_url": "https://www.wunderground.com/weather/ar/ezeiza/SAEZ",
+      "station_code": "SAEZ",
+      "page_title": "ezeiza, argentina weather conditions | weather underground",
+      "updated_text": "updated 2 seconds ago",
+      "temperature_f": 72,
+      "temperature_raw": "72",
+      "pressure_in": 29.83,
+      "pressure_raw": "29.83 in",
+      "visibility_miles": 6,
+      "visibility_raw": "6 miles",
+      "clouds": "Partly Cloudy",
+      "dew_point_f": 64,
+      "dew_point_raw": "64 F",
+      "humidity_pct": 76,
+      "humidity_raw": "76 %",
+      "rainfall_in": 0,
+      "rainfall_raw": "0 in",
+      "snow_depth_in": 0,
+      "snow_depth_raw": "0 in"
+    },
+    {
+      "collected_at_buenos_aires": "2026-04-17T11:37:57-03:00",
+      "source_url": "https://www.wunderground.com/weather/ar/ezeiza/SAEZ",
+      "station_code": "SAEZ",
+      "page_title": "ezeiza, argentina weather conditions | weather underground",
+      "updated_text": null,
+      "temperature_f": 72,
+      "temperature_raw": "72",
+      "pressure_in": 29.83,
+      "pressure_raw": "29.83 in",
+      "visibility_miles": 6,
+      "visibility_raw": "6 miles",
+      "clouds": "Partly Cloudy",
+      "dew_point_f": 64,
+      "dew_point_raw": "64 F",
+      "humidity_pct": 76,
+      "humidity_raw": "76 %",
+      "rainfall_in": 0,
+      "rainfall_raw": "0 in",
+      "snow_depth_in": 0,
+      "snow_depth_raw": "0 in"
+    }
+  ]
+}

@@ -1,2 +1,0 @@
--r ../Monthly/requirements.txt
-lightgbm==4.6.0
